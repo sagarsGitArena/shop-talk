@@ -1,7 +1,4 @@
 
-#ssh-keygen -t ed25519 -C "vasamsetty@gmail.com"
-printf 'Clone git repository' | figlet -w 200
-git clone git@github.com:sagarsGitArena/shop-talk.git
 figlet 'update'
 sudo apt update
 figlet 'upgrade'
@@ -15,15 +12,18 @@ echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docke
 sudo apt update
 printf "Install the following : \n\t 1> Docker Comuity,\n\t 2> Docker CLI,\n\t 3> Container Runtime" | figlet -w 100
 sudo apt install -y docker-ce docker-ce-cli containerd.io
+
+printf "Verify Docker version" | figlet -w 200
 docker --version
 sudo usermod -aG docker $USER
+
+printf "Verify Docker is functional" | figlet -w 200
 docker  run hello-world
 id -nG
 #exit
 #ssh to the ec2 again
 #docker run hello-world
 #id -nG
-
 
 printf "Install docker-compose" | figlet -w 150
 sudo apt install docker-compose

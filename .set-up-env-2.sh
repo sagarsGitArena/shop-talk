@@ -9,7 +9,8 @@ printf "Install nvidia-docker2"
 sudo apt-get install -y nvidia-docker2
 
 
-#docker pull nvidia/cuda:12.6.3-cudnn-devel-ubuntu22.04
+printf "Pull nvidia/cuda:12.6.3" | figlet -w 200
+docker pull nvidia/cuda:12.6.3-cudnn-devel-ubuntu22.04
 #To verify nvidia docker isntallation and to check the underlying GPUs are leveraged , try running the following command
 
 printf "verify with nvidia-smi command" | figlet -w 200

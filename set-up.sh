@@ -17,9 +17,9 @@ pwd
 
 ls -lart 
 
-if [ -d “shop-talk" ]; then
+if [ -d “/home/ubuntu/test/shop-talk" ]; then
     echo "Directory exists"
-    cd short-talk
+    cd /home/ubuntu/test/short-talk
     sh set-up-env.sh
 else
     echo "Directory does not exist"

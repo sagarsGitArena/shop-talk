@@ -44,11 +44,11 @@ with DAG(
 
 ## TEmporarily disable download task instead have copy task
 
-    download_task = PythonOperator(
-        task_id="download_tar_file",
-        python_callable=download_tar_file,
-        dag=dag
-    )
+    # download_task = PythonOperator(
+    #     task_id="download_tar_file",
+    #     python_callable=download_tar_file,
+    #     dag=dag
+    # )
 
     extract_task = PythonOperator(
         task_id="extract_tar_file",

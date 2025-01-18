@@ -53,8 +53,8 @@ x-airflow-common:
   # and uncomment the "build" line below, Then run `docker-compose build` to build the images.
   
   #image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.7.2}  
-  #image: ${AIRFLOW_IMAGE_NAME:-vasamsetty/airflow-urllib3_1.26.17:latest}
-  image: ${AIRFLOW_IMAGE_NAME:-vasamsetty/shop-talk_airflow_image:v1.0}
+  image: ${AIRFLOW_IMAGE_NAME:-vasamsetty/airflow-urllib3_1.26.17:latest}
+  #image: ${AIRFLOW_IMAGE_NAME:-vasamsetty/shop-talk_airflow_image:v1.0}
 
   # build: .
   environment:
@@ -72,9 +72,9 @@ x-airflow-common:
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
     # Add env variables here!
-    AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
-    AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
-    REGION_NAME: ${REGION_NAME}
+    AWS_ACCESS_KEY_ID: AKIA5LIHLU6G2BXDCWFR
+    AWS_SECRET_ACCESS_KEY: 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
+    REGION_NAME: us-east-1
         
 
     # yamllint disable rule:line-length

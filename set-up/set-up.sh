@@ -35,6 +35,7 @@ ls -lart
 if [ -d "$REPO_DIR" ]; then
     echo "Directory exists: $REPO_DIR"
     cd "$REPO_DIR" || exit 1
+    echo "Running .... [git pull]"
     git pull
     sh set-up/set-up-env.sh
 else

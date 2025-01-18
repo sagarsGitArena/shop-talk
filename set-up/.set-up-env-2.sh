@@ -50,4 +50,4 @@ docker info | grep -i runtime
 #printf "Restart docker after nvidia-docker2 installation" | figlet -w 300
 figlet_printf_green 'Restart Docker'
 sudo systemctl restart docker
-
+figlet_printf_green 'Docker Restarted'

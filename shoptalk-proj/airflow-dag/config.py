@@ -1,5 +1,9 @@
+#LISTINGS
 TMP_LISTINGS_SOURCE="/opt/airflow/downloads"
-TAR_FILE_NAME='abo-listings.tar'
+TAR_LISTINGS_FILE_NAME='abo-listings.tar'
+
+#IMAGES
+TAR_IMAGE_FILE_NAME='abo-images-small.tar'
 
 
 LISTINGS_DOWNLOAD_PATH_URL="https://amazon-berkeley-objects.s3.amazonaws.com/archives/abo-listings.tar"

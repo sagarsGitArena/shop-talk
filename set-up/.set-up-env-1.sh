@@ -22,6 +22,7 @@ figlet_print_green 'Ubuntu Upgrade'
 #printf "\e[32m$(figlet -f slant 'Upgrade')\e[0m"
 sudo apt upgrade -y
 
+sudo apt install net-tools
 #printf "\e[32m$(figlet -f slant 'Install Docker')\e[0m"
 
 figlet_print_green 'Install Docker'

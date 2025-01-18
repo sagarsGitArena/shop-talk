@@ -51,5 +51,5 @@ docker info | grep -i runtime
 figlet_printf_green 'Restart Docker'
 echo "Running .....sudo systemctl restart docker"
 sudo systemctl restart docker
-sleep(10)
+sleep 10
 figlet_printf_green 'Docker Restarted'

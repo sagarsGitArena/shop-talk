@@ -89,7 +89,9 @@ def extract_tar_file(extract_dir_path, tar_file, local_extracted_json_dir, extra
         
     
     decompressed_file_pattern_path = os.path.join(compressed_json_dir, decompressed_json_file_pattern)
+    print(f' decompressed_file_pattern_path :{decompressed_file_pattern_path}')
     decompressed_file_pattern = os.path.expanduser(decompressed_file_pattern_path)
+    print(f' decompressed_file_pattern :{decompressed_file_pattern}')
     matching_files = glob.glob(decompressed_file_pattern_path)
     print(f'matching_files: {matching_files}')
     if matching_files:

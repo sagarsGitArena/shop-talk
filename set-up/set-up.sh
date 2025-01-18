@@ -35,7 +35,7 @@ ls -lart
 if [ -d "$REPO_DIR" ]; then
     echo "Directory exists: $REPO_DIR"
     cd "$REPO_DIR" || exit 1
-    sh set-up-env.sh
+    sh set-up/set-up-env.sh
 else
     echo "Directory does not exist: $REPO_DIR"
 fi

@@ -15,7 +15,7 @@ curl -s https://raw.githubusercontent.com/sagarsGitArena/shop-talk/main/clone-gi
 if [ -d “shop-talk ]; then
     echo "Directory exists"
 	 cd short-talk
-	 sh set-up-env.sh
+	 sh set-up/set-up-env.sh
 else
     echo "Directory does not exist"
 fi

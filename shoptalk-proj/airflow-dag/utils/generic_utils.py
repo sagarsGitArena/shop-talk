@@ -2,17 +2,22 @@
 import shutil
 import os
 
-def copy_file( source_folder, destination_folder,file_name):
-    
+def copy_file( source_folder, destination_folder,file_name):   
+
+
     source_file = os.path.join(source_folder, file_name)
-    destination_file = os.path.join(destination_folder, file_name)
+    destination_file = os.path.join(destination_folder, os.path.basename(file_name))
+   
+    print(f'source_file:{source_file}')
+    print(f'destination_file:{destination_file}')
     
     
     if os.path.isfile(source_file):
         try:
-            # Attempt to copy the file
-            shutil.copy(source_file, destination_file)
-            print(f"Copied {file_name} to {destination_folder}")
+            print(f"Attempting to copy {source_file} to {destination_file}")
+            # Copy the specific file to the destination folder
+            result = shutil.copy(source_file, destination_file)
+            print(f"File successfully copied to: {result}")
         except FileNotFoundError:
             print(f"Error: {file_name} not found in the source folder.")
         except PermissionError:
@@ -21,3 +26,5 @@ def copy_file( source_folder, destination_folder,file_name):
             print(f"Error: An error occurred while copying {file_name}: {e}")
         except Exception as e:
             print(f"Unexpected error while copying {file_name}: {e}")
+    else:
+        print(f"Error: {source_file} does not exist.")

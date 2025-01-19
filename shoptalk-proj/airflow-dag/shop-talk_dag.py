@@ -135,8 +135,8 @@ with DAG(
         task_id="copy_to_rawimage_folder",
         python_callable=copy_file,
                 op_kwargs={
-                    "source_folder" : "/home/ubuntu/CAPSTONE/shop-talk/shoptalk-proj/downloads",                    
-                    "destination_folder" : "/home/ubuntu/CAPSTONE/shop-talk/shoptalk-proj/data/rawimages",
+                    "source_folder" : "/opt/airflow/downloads",                    
+                    "destination_folder" : "/opt/airflow/data/rawimages",
                     "file_name": "abo-images-small.tar",
                   },
         trigger_rule='all_success',

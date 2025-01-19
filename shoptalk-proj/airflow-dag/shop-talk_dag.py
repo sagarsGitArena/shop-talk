@@ -134,10 +134,10 @@ with DAG(
     copy_to_rawimage_folder = PythonOperator(
         task_id="copy_to_rawimage_folder",
         python_callable=copy_file,
-        op_kwargs={
-                    "source_folder" : "/home/ubuntu/CAPSTONE/shop-talk/shoptalk-proj/downloads",
+                op_kwargs={
+                    "source_folder" : "/home/ubuntu/CAPSTONE/shop-talk/shoptalk-proj/downloads",                    
+                    "destination_folder" : "/home/ubuntu/CAPSTONE/shop-talk/shoptalk-proj/data/rawimages",
                     "file_name": "abo-images-small.tar",
-                    "destination_folder" : "/home/ubuntu/CAPSTONE/shop-talk/shoptalk-proj/data/rawimages"
                   },
         trigger_rule='all_success',
         depends_on_past=False,

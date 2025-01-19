@@ -1,3 +1,2 @@
-docker compose down
-docker system prune -f
-docker volume prune -f
+./.clean-dirs.sh
+./.docker-clean-up.sh

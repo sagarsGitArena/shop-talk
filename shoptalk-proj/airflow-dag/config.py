@@ -1,8 +1,8 @@
 TMP_LISTINGS_SOURCE="/opt/airflow/downloads"
 TAR_FILE_NAME='abo-listings.tar'
 
-TMP_IMAGE_SOURCE="/opt/airflow/downloads"
-TMP_IMAGE_TAR_FILE_NAME="image-data-subset/abo-images-small.tar"
+TMP_IMAGE_DOWNLOAD_LOCATION="/opt/airflow/downloads/abo-images-small.tar"
+IMAGES_OBJECT_S3_KEY_ID="image-data-subset/abo-images-small.tar"
 
 
 

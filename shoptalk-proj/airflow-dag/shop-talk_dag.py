@@ -19,7 +19,7 @@ import numpy as np
 from datetime import datetime, timedelta
 
 
-from config import LISTINGS_DOWNLOAD_PATH_URL, LOCAL_RAW_DATA_DIR, ALL_LISTINGS_DATA_CSV, US_ONLY_LISTINGS_CSV, US_PRODUCT_IMAGE_MERGE_CSV, AWS_S3_BUCKET, LISTINGS_CSV_FILE_LOCATION, IMAGES_DOWNLOAD_PATH_URL,LOCAL_RAW_IMGS_DIR, IMAGES_CSV_FILE_LOCATION, IMAGES_CSV_FILE, TMP_LISTINGS_SOURCE, TAR_FILE_NAME, TMP_IMAGE_SOURCE, TMP_IMAGE_TAR_FILE_NAME
+from config import LISTINGS_DOWNLOAD_PATH_URL, LOCAL_RAW_DATA_DIR, ALL_LISTINGS_DATA_CSV, US_ONLY_LISTINGS_CSV, US_PRODUCT_IMAGE_MERGE_CSV, AWS_S3_BUCKET, LISTINGS_CSV_FILE_LOCATION, IMAGES_DOWNLOAD_PATH_URL,LOCAL_RAW_IMGS_DIR, IMAGES_CSV_FILE_LOCATION, IMAGES_CSV_FILE, TMP_LISTINGS_SOURCE, TAR_FILE_NAME, TMP_IMAGE_DOWNLOAD_LOCATION, IMAGES_OBJECT_S3_KEY_ID
 from tasks.definitions import download_tar_file, extract_tar_file, flatten_each_json_and_save_as_csv, flatten_all_json_and_save_as_csv, perform_eda_on_us_listings_data, flatten_to_csv_images, download_tar_file_images, extract_tar_file_images, up_load_us_listings_to_s3, merge_listings_images, copy_listings_tar_file
 
 
@@ -121,8 +121,8 @@ with DAG(
                     "access_key": os.environ["AWS_ACCESS_KEY_ID"],
                     "secret_key": os.environ["AWS_SECRET_ACCESS_KEY"],
                     "bucket_name": AWS_S3_BUCKET,
-                    "file_name" : TMP_IMAGE_TAR_FILE_NAME,
-                    "local_file_path": TMP_IMAGE_SOURCE
+                    "file_name" : IMAGES_OBJECT_S3_KEY_ID,
+                    "local_file_path": TMP_IMAGE_DOWNLOAD_LOCATION
                    },
         trigger_rule='all_success',
         depends_on_past=False,

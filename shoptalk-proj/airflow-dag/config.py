@@ -1,6 +1,11 @@
 TMP_LISTINGS_SOURCE="/opt/airflow/downloads"
 TAR_FILE_NAME='abo-listings.tar'
 
+TMP_IMAGE_SOURCE="/opt/airflow/downloads"
+TMP_IMAGE_TAR_FILE_NAME="image-data-subset/abo-images-small.tar"
+
+
+
 
 LISTINGS_DOWNLOAD_PATH_URL="https://amazon-berkeley-objects.s3.amazonaws.com/archives/abo-listings.tar"
 LOCAL_RAW_DATA_DIR="/opt/airflow/data/raw"
@@ -14,4 +19,6 @@ IMAGES_DOWNLOAD_PATH_URL="https://amazon-berkeley-objects.s3.amazonaws.com/archi
 LOCAL_RAW_IMGS_DIR="/opt/airflow/data/rawimages"
 IMAGES_CSV_FILE_LOCATION="/opt/airflow/data/rawimages/images/metadata"
 IMAGES_CSV_FILE="images.csv"
+
+
 

@@ -2,6 +2,9 @@
 import boto3
 from botocore.exceptions import NoCredentialsError
 
+import boto3
+from botocore.exceptions import NoCredentialsError
+
 
 def upload_file_to_s3(access_key, secret_key, bucket_name, file_name, local_file_path):
     # Create an S3 client using the provided credentials

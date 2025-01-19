@@ -10,7 +10,7 @@ import gzip
 import glob
 import json
 from utils.json_utils import flatten_json
-from utils.s3_utils import upload_file_to_s3
+from utils.s3_utils import upload_file_to_s3, download_file_from_s3
 import re
 import numpy as np
 #import mlflow
@@ -19,7 +19,7 @@ import numpy as np
 from datetime import datetime, timedelta
 
 
-from config import LISTINGS_DOWNLOAD_PATH_URL, LOCAL_RAW_DATA_DIR, ALL_LISTINGS_DATA_CSV, US_ONLY_LISTINGS_CSV, US_PRODUCT_IMAGE_MERGE_CSV, AWS_S3_BUCKET, LISTINGS_CSV_FILE_LOCATION, IMAGES_DOWNLOAD_PATH_URL,LOCAL_RAW_IMGS_DIR, IMAGES_CSV_FILE_LOCATION, IMAGES_CSV_FILE, TMP_LISTINGS_SOURCE, TAR_FILE_NAME
+from config import LISTINGS_DOWNLOAD_PATH_URL, LOCAL_RAW_DATA_DIR, ALL_LISTINGS_DATA_CSV, US_ONLY_LISTINGS_CSV, US_PRODUCT_IMAGE_MERGE_CSV, AWS_S3_BUCKET, LISTINGS_CSV_FILE_LOCATION, IMAGES_DOWNLOAD_PATH_URL,LOCAL_RAW_IMGS_DIR, IMAGES_CSV_FILE_LOCATION, IMAGES_CSV_FILE, TMP_LISTINGS_SOURCE, TAR_FILE_NAME, TMP_IMAGE_SOURCE, TMP_IMAGE_TAR_FILE_NAME
 from tasks.definitions import download_tar_file, extract_tar_file, flatten_each_json_and_save_as_csv, flatten_all_json_and_save_as_csv, perform_eda_on_us_listings_data, flatten_to_csv_images, download_tar_file_images, extract_tar_file_images, up_load_us_listings_to_s3, merge_listings_images, copy_listings_tar_file
 
 
@@ -85,8 +85,7 @@ with DAG(
     flatten_all_json_and_save_as_csv = PythonOperator(
         task_id="flatten_all_json_and_save_as_csv",
         python_callable=flatten_all_json_and_save_as_csv,
-        op_kwargs= {"local_extracted_json_dir": "listings/metadata/"                   
-        },
+        op_kwargs= {"local_extracted_json_dir": "listings/metadata/"},
         #provide_context=True,        
         trigger_rule='all_success',
         depends_on_past=False,
@@ -96,13 +95,39 @@ with DAG(
 
 
   # Task 1: Download the images tar file
-    download_images_task = PythonOperator(
-        task_id="download_tar_file_images",
-        python_callable=download_tar_file_images,
+    # download_images_task = PythonOperator(
+    #     task_id="download_tar_file_images",
+    #     python_callable=download_tar_file_images,
+    #     depends_on_past=False,
+    #     dag=dag
+    # )
+    
+
+    # check_if_image_file_arrived = S3KeySensor(
+    #     task_id='check_if_data_file_arrived',
+    #     poke_interval=10,  # Check for file every 60 seconds
+    #     timeout=6000,  # Timeout if file not found after 600 seconds
+    #     bucket_key=S3_OBJECT_KEY,  # Update with your S3 path
+    #     bucket_name=AWS_S3_BUCKET,
+    #     aws_conn_id="aws_default",
+    #     mode='poke',
+    #     dag=dag,
+    # )
+
+    copy_images_to_local_folder_from_s3 = PythonOperator(
+        task_id="copy_images_to_local_folder",
+        python_callable=download_file_from_s3,
+        op_kwargs={
+                    "access_key": os.environ["AWS_ACCESS_KEY_ID"],
+                    "secret_key": os.environ["AWS_SECRET_ACCESS_KEY"],
+                    "bucket_name": AWS_S3_BUCKET,
+                    "file_name" : TMP_IMAGE_TAR_FILE_NAME,
+                    "local_file_path": TMP_IMAGE_SOURCE
+                   },
+        trigger_rule='all_success',
         depends_on_past=False,
         dag=dag
     )
-
     # Task 2: Extract the images tar file
     extract_images_task = PythonOperator(
         task_id="extract_tar_file_images",
@@ -134,6 +159,6 @@ with DAG(
 #[download_task >> extract_task >> flatten_all_json_and_save_as_csv , download_images_task >> extract_images_task >> flatten_images_metadata_task] >> merge_listings_image_df_task
 
 ## If we are copying the tar file from local dir for minimal dataset
-[copy_listings_task >> extract_task >> flatten_all_json_and_save_as_csv , download_images_task >> extract_images_task >> flatten_images_metadata_task] >> merge_listings_image_df_task
+[copy_listings_task >> extract_task >> flatten_all_json_and_save_as_csv ,  copy_images_to_local_folder_from_s3 >> extract_images_task >> flatten_images_metadata_task] >> merge_listings_image_df_task
 
 

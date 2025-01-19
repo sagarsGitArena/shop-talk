@@ -11,6 +11,8 @@ import glob
 import json
 from utils.json_utils import flatten_json
 from utils.s3_utils import upload_file_to_s3, download_file_from_s3
+from utils.generic_utils import copy_file
+
 import re
 import numpy as np
 #import mlflow
@@ -128,6 +130,20 @@ with DAG(
         depends_on_past=False,
         dag=dag
     )
+    
+    copy_to_rawimage_folder = PythonOperator(
+        task_id="copy_to_rawimage_folder",
+        python_callable=copy_file,
+        op_kwargs={
+                    "source_folder" : "/home/ubuntu/CAPSTONE/shop-talk/shoptalk-proj/downloads",
+                    "file_name": "abo-images-small.tar",
+                    "destination_folder" : "/home/ubuntu/CAPSTONE/shop-talk/shoptalk-proj/data/rawimages"
+                  },
+        trigger_rule='all_success',
+        depends_on_past=False,
+        dag=dag
+        
+    )
     # Task 2: Extract the images tar file
     extract_images_task = PythonOperator(
         task_id="extract_tar_file_images",
@@ -159,6 +175,6 @@ with DAG(
 #[download_task >> extract_task >> flatten_all_json_and_save_as_csv , download_images_task >> extract_images_task >> flatten_images_metadata_task] >> merge_listings_image_df_task
 
 ## If we are copying the tar file from local dir for minimal dataset
-[copy_listings_task >> extract_task >> flatten_all_json_and_save_as_csv ,  copy_images_to_local_folder_from_s3 >> extract_images_task >> flatten_images_metadata_task] >> merge_listings_image_df_task
+[copy_listings_task >> extract_task >> flatten_all_json_and_save_as_csv ,  copy_images_to_local_folder_from_s3 >> copy_to_rawimage_folder >> extract_images_task >> flatten_images_metadata_task] >> merge_listings_image_df_task
 
 

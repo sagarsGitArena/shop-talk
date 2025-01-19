@@ -22,6 +22,7 @@ def upload_file_to_s3(access_key, secret_key, bucket_name, file_name, local_file
 
 
 def download_file_from_s3(access_key, secret_key, bucket_name, file_name, local_file_path):
+    print(f'AWS_ACCESS_KEY:{access_key}, AWS_SECRET_KEY:{secret_key}')
     s3 = boto3.client('s3', aws_access_key_id=access_key, aws_secret_access_key=secret_key)
 
     try:
@@ -44,3 +45,6 @@ def copy_file_between_buckets(access_key, secret_key, source_bucket, destination
         print(f"File '{file_name}' copied successfully from '{source_bucket}' to '{destination_bucket}'")
     except NoCredentialsError:
         print("Credentials not available or incorrect")        
+    
+
+

@@ -12,6 +12,7 @@ import glob
 import json
 from utils.json_utils import flatten_json
 from utils.s3_utils import upload_file_to_s3
+from utils.generic_utils import copy_file
 import re
 import numpy as np
 #import mlflow
@@ -266,7 +267,9 @@ def load_us_data_and_perform_eda(local_tmp_dir, **kwargs):
     US_DF_filtered4.to_csv(all_US_listings_filtered_v1_csv_file)
     print(f"US_listings filtered data is saved to :{all_US_listings_filtered_v1_csv_file}") 
     
-    return all_US_listings_filtered_v1_csv_file
+    kwargs['ti'].xcom_push(key='all_US_listings_filtered_v1_csv_file', value=all_US_listings_filtered_v1_csv_file)
+    
+    #return all_US_listings_filtered_v1_csv_file
 
 
     
@@ -329,6 +332,7 @@ def perform_eda_on_us_listings_data(local_dir, **kwargs):
     US_DF_filtered4.to_csv(all_US_listings_filtered_v2_csv_file, index=False)
     print(f"US_listings filtered data is saved to :{all_US_listings_filtered_v2_csv_file}") 
     
+    kwargs['ti'].xcom_push(key='all_US_listings_filtered_v2_csv_file', value=all_US_listings_filtered_v2_csv_file)
     return all_US_listings_filtered_v2_csv_file
     
 
@@ -359,6 +363,7 @@ def flatten_to_csv_images(**kwargs):
     # Save the decompressed metadata to a flat CSV file
     metadata_df.to_csv(output_csv_path, index=False)
     print(f"Flattened metadata saved to: {output_csv_path}")
+    kwargs['ti'].xcom_push(key='image_file_csv', value=output_csv_path)
 
 
 
@@ -428,12 +433,23 @@ def up_load_us_listings_to_s3():
     print(f'local_file_path2: {os.path.exists(local_file_path2)}')
     upload_file_to_s3(aws_access_key_id, aws_secret_access_key, AWS_S3_BUCKET, "listings/us_listings.csv", local_file_path2 )
 
-def merge_listings_images():
+    
+
+def merge_listings_images(**kwargs):
     # Read from local and merge
+    
+    ti = kwargs['ti']
+    
+    us_listings_filtered_file_csv = ti.xcom_pull(task_ids='perform_eda_on_us_listings_data', key='all_US_listings_filtered_v2_csv_file')  # Pulling from Task B
+    image_file_csv = ti.xcom_pull(task_ids='flatten_to_csv_images', key='image_file_csv')  # Pulling from Task A
+    
+    
+    print(f"Collected US_LISTINGS_CSV: {us_listings_filtered_file_csv} and IMAGES_CSV: {image_file_csv}")
     print(f'MERGED listings and images dataframes')
-    images_csv_path=IMAGES_CSV_FILE_LOCATION+"/"+IMAGES_CSV_FILE
-    images_csv_df = pd.read_csv(images_csv_df)
-    listings_csv_path=LISTINGS_CSV_FILE_LOCATION+"/"+US_ONLY_LISTINGS_CSV
-    us_listings_csv_df = pd.read_csv(listings_csv_path)    
+    
+    us_listings_csv_df = pd.read_csv(us_listings_filtered_file_csv)  
+    images_csv_df = pd.read_csv(image_file_csv)      
     merged_df = pd.merge(us_listings_csv_df, images_csv_df, left_on='main_image_id', right_on='image_id', how=left)
+    print('Listings and Image data merged into one dataframe')
+    print(merged_df.info())
     

@@ -12,13 +12,14 @@ def copy_file( source_folder, destination_folder,file_name):
     print(f'destination_folder:[{destination_folder}]')   
     
     
-    
+    result = ''
     if os.path.isfile(source_file):
         try:
             print(f"Attempting to copy [{source_file}] to [{destination_folder}]")
             # Copy the specific file to the destination folder
             result = shutil.copy(source_file.strip(), destination_folder.strip())
             print(f"File successfully copied to: {result}")
+            
         except FileNotFoundError:
             print(f"Error: {file_name} not found in the source folder.")
         except PermissionError:
@@ -29,3 +30,4 @@ def copy_file( source_folder, destination_folder,file_name):
             print(f"Unexpected error while copying {file_name}: {e}")
     else:
         print(f"Error: [{source_file}] does not exist.")
+    return result

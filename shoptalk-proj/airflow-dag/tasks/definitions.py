@@ -250,7 +250,11 @@ def load_us_data_and_perform_eda(local_tmp_dir, **kwargs):
     
     US_DF_filtered = pd.concat([df_new2, lang_val_merge_df], axis=1)
     
-    drop_column_list1=['product_description_value','other_image_id_0', 'other_image_id_1', 'other_image_id_2', 'other_image_id_3', 'other_image_id_4', 'other_image_id_5', 'other_image_id_6', 'other_image_id_7', 'other_image_id_8', 'other_image_id_9', 'other_image_id_10', 'other_image_id_11', 'other_image_id_12', 'other_image_id_13', 'other_image_id_14', 'other_image_id_15', 'other_image_id_16', 'other_image_id_17', 'other_image_id_18', 'other_image_id_19', 'spin_id', '3dmodel_id', 'node_0_node_id', 'node_0_node_name', 'node_1_node_id', 'node_1_node_name', 'node_2_node_id', 'node_2_node_name', 'node_3_node_id', 'node_3_node_name', 'node_4_node_id', 'node_4_node_name', 'node_5_node_id', 'node_5_node_name', 'node_6_node_id', 'node_6_node_name', 'node_7_node_id', 'node_7_node_name', 'node_8_node_id', 'node_8_node_name', 'node_9_node_id', 'node_9_node_name', 'node_10_node_id', 'node_10_node_name']
+    # The following line applies for the entire of the dataset
+    #drop_column_list1=['product_description_value','other_image_id_0', 'other_image_id_1', 'other_image_id_2', 'other_image_id_3', 'other_image_id_4', 'other_image_id_5', 'other_image_id_6', 'other_image_id_7', 'other_image_id_8', 'other_image_id_9', 'other_image_id_10', 'other_image_id_11', 'other_image_id_12', 'other_image_id_13', 'other_image_id_14', 'other_image_id_15', 'other_image_id_16', 'other_image_id_17', 'other_image_id_18', 'other_image_id_19', 'spin_id', '3dmodel_id', 'node_0_node_id', 'node_0_node_name', 'node_1_node_id', 'node_1_node_name', 'node_2_node_id', 'node_2_node_name', 'node_3_node_id', 'node_3_node_name', 'node_4_node_id', 'node_4_node_name', 'node_5_node_id', 'node_5_node_name', 'node_6_node_id', 'node_6_node_name', 'node_7_node_id', 'node_7_node_name', 'node_8_node_id', 'node_8_node_name', 'node_9_node_id', 'node_9_node_name', 'node_10_node_id', 'node_10_node_name']
+    
+    #The following like applies only to us_listings_9 and us_listings_a. Comment this out later.
+    drop_column_list1=['product_description_value','other_image_id_0', 'other_image_id_1', 'other_image_id_2', 'other_image_id_3', 'other_image_id_4', 'other_image_id_5', 'other_image_id_6', 'other_image_id_7', 'other_image_id_8', 'other_image_id_9', 'other_image_id_10', 'other_image_id_11', 'other_image_id_12', 'other_image_id_13', 'other_image_id_14', 'other_image_id_15',  'spin_id', '3dmodel_id', 'node_0_node_id', 'node_0_node_name', 'node_1_node_id', 'node_1_node_name', 'node_2_node_id', 'node_2_node_name', 'node_3_node_id', 'node_3_node_name', 'node_4_node_id', 'node_4_node_name', 'node_5_node_id', 'node_5_node_name', 'node_6_node_id', 'node_6_node_name', 'node_7_node_id', 'node_7_node_name', 'node_8_node_id', 'node_8_node_name']
     US_DF_filtered3= US_DF_filtered.drop(columns=drop_column_list1)
     
     
@@ -311,7 +315,11 @@ def perform_eda_on_us_listings_data(local_dir, **kwargs):
     
     US_DF_filtered = pd.concat([df_new2, lang_val_merge_df], axis=1)
     
-    drop_column_list1=['spin_id', '3dmodel_id', 'node_0_node_id', 'node_0_node_name', 'node_1_node_id', 'node_1_node_name', 'node_2_node_id', 'node_2_node_name', 'node_3_node_id', 'node_3_node_name', 'node_4_node_id', 'node_4_node_name', 'node_5_node_id', 'node_5_node_name', 'node_6_node_id', 'node_6_node_name', 'node_7_node_id', 'node_7_node_name', 'node_8_node_id', 'node_8_node_name', 'node_9_node_id', 'node_9_node_name', 'node_10_node_id', 'node_10_node_name']
+    #The following line applies to all us_listings data. U comment later.
+    #drop_column_list1=['spin_id', '3dmodel_id', 'node_0_node_id', 'node_0_node_name', 'node_1_node_id', 'node_1_node_name', 'node_2_node_id', 'node_2_node_name', 'node_3_node_id', 'node_3_node_name', 'node_4_node_id', 'node_4_node_name', 'node_5_node_id', 'node_5_node_name', 'node_6_node_id', 'node_6_node_name', 'node_7_node_id', 'node_7_node_name', 'node_8_node_id', 'node_8_node_name', 'node_9_node_id', 'node_9_node_name', 'node_10_node_id', 'node_10_node_name']
+    
+    #The following line applies to us_listings_9 and us_listings_a. So delete later
+    drop_column_list1=['spin_id', '3dmodel_id', 'node_0_node_id', 'node_0_node_name', 'node_1_node_id', 'node_1_node_name', 'node_2_node_id', 'node_2_node_name', 'node_3_node_id', 'node_3_node_name', 'node_4_node_id', 'node_4_node_name', 'node_5_node_id', 'node_5_node_name', 'node_6_node_id', 'node_6_node_name', 'node_7_node_id', 'node_7_node_name', 'node_8_node_id', 'node_8_node_name']
     US_DF_filtered3= US_DF_filtered.drop(columns=drop_column_list1)
     US_DF_filtered4 = US_DF_filtered3.dropna(subset=['main_image_id'])
     US_DF_filtered4['Price'] = np.random.uniform(20, 100, size=len(US_DF_filtered4)).round(2)    

@@ -195,6 +195,6 @@ with DAG(
 #[download_task >> extract_task >> flatten_all_json_and_save_as_csv , download_images_task >> extract_images_task >> flatten_images_metadata_task] >> merge_listings_image_df_task
 
 ## If we are copying the tar file from local dir for minimal dataset
-[copy_listings_task >> extract_task >> flatten_all_json_and_save_US_data_as_csv >> load_us_data_and_perform_eda,  copy_images_to_local_folder_from_s3 >> copy_to_rawimage_folder >> extract_images_task >> flatten_images_metadata_task] >> merge_listings_image_df_task
+[copy_listings_task >> extract_task >> flatten_all_json_and_save_US_data_as_csv >> load_us_data_and_perform_eda >> perform_eda_on_us_listings_data,  copy_images_to_local_folder_from_s3 >> copy_to_rawimage_folder >> extract_images_task >> flatten_images_metadata_task] >> merge_listings_image_df_task
 
 

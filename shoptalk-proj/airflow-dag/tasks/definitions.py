@@ -18,7 +18,7 @@ import numpy as np
 #from sentence_transformers import SentenceTransformer
 
 from datetime import datetime, timedelta
-from config import LISTINGS_DOWNLOAD_PATH_URL, LOCAL_RAW_DATA_DIR, ALL_LISTINGS_DATA_CSV, US_ONLY_LISTINGS_CSV, US_PRODUCT_IMAGE_MERGE_CSV, AWS_S3_BUCKET, LISTINGS_CSV_FILE_LOCATION, IMAGES_DOWNLOAD_PATH_URL,LOCAL_RAW_IMGS_DIR, IMAGES_CSV_FILE_LOCATION, IMAGES_CSV_FILE, TMP_LISTINGS_SOURCE, TAR_FILE_NAME
+from config import LISTINGS_DOWNLOAD_PATH_URL, LOCAL_RAW_DATA_DIR, ALL_LISTINGS_DATA_CSV, US_ONLY_LISTINGS_CSV, US_ONLY_LISTINGS_FILTERED_V1_CSV, US_ONLY_LISTINGS_FILTERED_V2_CSV,  US_PRODUCT_IMAGE_MERGE_CSV, AWS_S3_BUCKET, LISTINGS_CSV_FILE_LOCATION, IMAGES_DOWNLOAD_PATH_URL,LOCAL_RAW_IMGS_DIR, IMAGES_CSV_FILE_LOCATION, IMAGES_CSV_FILE, TMP_LISTINGS_SOURCE, TAR_FILE_NAME
 
 #from s3_download import download_file_from_s3
 def download_tar_file(**kwargs):
@@ -166,7 +166,7 @@ def flatten_each_json_and_save_as_csv(local_extracted_json_dir):
 
     
 
-def flatten_all_json_and_save_as_csv(local_extracted_json_dir):
+def flatten_all_json_and_save_as_csv(local_extracted_json_dir, **kwargs):
     print("ENTERED flatten_json_and_load_to_dataframe ***************")
     directory_path= os.path.join(LOCAL_RAW_DATA_DIR, local_extracted_json_dir)
     json_files = [f for f in os.listdir(directory_path) if f.endswith('.json')]
@@ -195,17 +195,83 @@ def flatten_all_json_and_save_as_csv(local_extracted_json_dir):
         
 
     print(us_listings_raw_df.info())
-    all_listings_csv_file = directory_path +'/'+ US_ONLY_LISTINGS_CSV
-    us_listings_raw_df.to_csv(all_listings_csv_file)
-    print(f"US_listings raw data is saved to :{all_listings_csv_file}")
-
-
-
-def perform_eda_on_us_listings_data(local_extracted_json_dir):
+    all_US_listings_csv_file = directory_path +'/'+ US_ONLY_LISTINGS_CSV
+    us_listings_raw_df.to_csv(all_US_listings_csv_file)
+    print(f"US_listings raw data is saved to :{all_US_listings_csv_file}")
     
-    directory_path = os.path.join(LOCAL_RAW_DATA_DIR)
-    all_listings_csv_file = directory_path +'/'+ US_ONLY_LISTINGS_CSV
-    US_DF = pd.read_csv(all_listings_csv_file)
+    # Return the path to the CSV file for XCom
+    return all_US_listings_csv_file
+
+def load_us_data_and_perform_eda(local_tmp_dir, **kwargs):
+    
+    directory_path= os.path.join(LOCAL_RAW_DATA_DIR, local_tmp_dir)
+    
+    # Retrieve the file path from XCom
+    ti = kwargs['ti']
+    all_US_listings_csv_file = ti.xcom_pull(task_ids="flatten_all_json_and_save_US_data_as_csv")
+    US_DF = pd.read_csv(all_US_listings_csv_file)
+    
+    language_tag_columns = [col for col in US_DF.columns if 'language_tag' in col]
+    value_columns =  [col.replace('language_tag', 'value') for col in language_tag_columns]
+
+    language_df=US_DF[language_tag_columns ].copy()
+    value_df=US_DF[value_columns].copy()
+    
+    
+    distinct_columns_set = {re.sub(r'_\d+_language_tag', '', col) for col in language_tag_columns}
+    
+    lang_val_merge_df = pd.DataFrame()
+    for a_col in distinct_columns_set:
+        the_column_list = []
+        prefix = a_col + '_'
+        print(prefix)
+        the_column_list = [col for col in US_DF.columns if prefix in col]
+        the_column_list = [col for col in the_column_list if 'standardized' not in col]
+        the_column_list = [col for col in the_column_list if 'alternate_representations' not in col]
+
+        num_brand_keypairs = len(the_column_list)//2
+        print(the_column_list)
+        a_col_value= prefix + 'value'
+        lang_val_merge_df[a_col_value] = US_DF.apply(
+            lambda row: ' '.join(
+                str(row[f'{prefix}{i}_value'])
+                for i in range(num_brand_keypairs)
+                if row[f'{prefix}{i}_language_tag'] == 'en_US'
+            ).strip(),
+            axis=1
+        )
+        
+        
+    US_DF.drop(columns=language_tag_columns, inplace=True)
+    US_DF.drop(columns=value_columns, inplace=True)
+    
+    df_new = US_DF.drop([col for col in US_DF.columns if 'standardized' in col], axis=1)
+    df_new2 = df_new.drop([col for col in df_new.columns if 'alternate_representations' in col], axis=1)
+    
+    US_DF_filtered = pd.concat([df_new2, lang_val_merge_df], axis=1)
+    
+    drop_column_list1=['product_description_value','other_image_id_0', 'other_image_id_1', 'other_image_id_2', 'other_image_id_3', 'other_image_id_4', 'other_image_id_5', 'other_image_id_6', 'other_image_id_7', 'other_image_id_8', 'other_image_id_9', 'other_image_id_10', 'other_image_id_11', 'other_image_id_12', 'other_image_id_13', 'other_image_id_14', 'other_image_id_15', 'other_image_id_16', 'other_image_id_17', 'other_image_id_18', 'other_image_id_19', 'spin_id', '3dmodel_id', 'node_0_node_id', 'node_0_node_name', 'node_1_node_id', 'node_1_node_name', 'node_2_node_id', 'node_2_node_name', 'node_3_node_id', 'node_3_node_name', 'node_4_node_id', 'node_4_node_name', 'node_5_node_id', 'node_5_node_name', 'node_6_node_id', 'node_6_node_name', 'node_7_node_id', 'node_7_node_name', 'node_8_node_id', 'node_8_node_name', 'node_9_node_id', 'node_9_node_name', 'node_10_node_id', 'node_10_node_name']
+    US_DF_filtered3= US_DF_filtered.drop(columns=drop_column_list1)
+    
+    
+    US_DF_filtered4 = US_DF_filtered3.dropna(subset=['main_image_id'])
+    ## Add random "PRICE" Colume to the data set
+    US_DF_filtered4['Price'] = np.random.uniform(20, 100, size=len(US_DF_filtered4)).round(2)
+    
+    all_US_listings_filtered_v1_csv_file = directory_path +'/'+ US_ONLY_LISTINGS_FILTERED_V1_CSV
+    US_DF_filtered4.to_csv(all_US_listings_filtered_v1_csv_file)
+    print(f"US_listings filtered data is saved to :{all_US_listings_filtered_v1_csv_file}") 
+    
+    return all_US_listings_filtered_v1_csv_file
+
+
+    
+
+def perform_eda_on_us_listings_data(local_dir, **kwargs):
+    
+    directory_path = os.path.join(LOCAL_RAW_DATA_DIR,  local_dir)
+    all_US_listings_filtered_csv_file = directory_path +'/'+ US_ONLY_LISTINGS_CSV
+    US_DF = pd.read_csv(all_US_listings_filtered_csv_file)
     
     ## Replacing 
     language_tag_columns = [col for col in US_DF.columns if 'language_tag' in col]
@@ -248,9 +314,14 @@ def perform_eda_on_us_listings_data(local_extracted_json_dir):
     drop_column_list1=['spin_id', '3dmodel_id', 'node_0_node_id', 'node_0_node_name', 'node_1_node_id', 'node_1_node_name', 'node_2_node_id', 'node_2_node_name', 'node_3_node_id', 'node_3_node_name', 'node_4_node_id', 'node_4_node_name', 'node_5_node_id', 'node_5_node_name', 'node_6_node_id', 'node_6_node_name', 'node_7_node_id', 'node_7_node_name', 'node_8_node_id', 'node_8_node_name', 'node_9_node_id', 'node_9_node_name', 'node_10_node_id', 'node_10_node_name']
     US_DF_filtered3= US_DF_filtered.drop(columns=drop_column_list1)
     US_DF_filtered4 = US_DF_filtered3.dropna(subset=['main_image_id'])
-    US_DF_filtered4['Price'] = np.random.uniform(20, 100, size=len(US_DF_filtered4)).round(2)
+    US_DF_filtered4['Price'] = np.random.uniform(20, 100, size=len(US_DF_filtered4)).round(2)    
     
-    US_DF_filtered4.to_csv(directory_path+'/'+'All_US_DF_filtered_v1.csv', index=False)
+    
+    all_US_listings_filtered_v2_csv_file = directory_path +'/'+ US_ONLY_LISTINGS_FILTERED_V2_CSV
+    US_DF_filtered4.to_csv(all_US_listings_filtered_v2_csv_file, index=False)
+    print(f"US_listings filtered data is saved to :{all_US_listings_filtered_v2_csv_file}") 
+    
+    return all_US_listings_filtered_v2_csv_file
     
 
 

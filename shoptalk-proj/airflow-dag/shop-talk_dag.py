@@ -22,7 +22,7 @@ from datetime import datetime, timedelta
 
 
 from config import LISTINGS_DOWNLOAD_PATH_URL, LOCAL_RAW_DATA_DIR, ALL_LISTINGS_DATA_CSV, US_ONLY_LISTINGS_CSV, US_PRODUCT_IMAGE_MERGE_CSV, AWS_S3_BUCKET, LISTINGS_CSV_FILE_LOCATION, IMAGES_DOWNLOAD_PATH_URL,LOCAL_RAW_IMGS_DIR, IMAGES_CSV_FILE_LOCATION, IMAGES_CSV_FILE, TMP_LISTINGS_SOURCE, TAR_FILE_NAME, TMP_IMAGE_DOWNLOAD_LOCATION, IMAGES_OBJECT_S3_KEY_ID
-from tasks.definitions import download_tar_file, extract_tar_file, flatten_each_json_and_save_as_csv, flatten_all_json_and_save_as_csv, perform_eda_on_us_listings_data, flatten_to_csv_images, download_tar_file_images, extract_tar_file_images, up_load_us_listings_to_s3, merge_listings_images, copy_listings_tar_file, load_us_data_and_perform_eda, merge_listings_image_df_task
+from tasks.definitions import download_tar_file, extract_tar_file, flatten_each_json_and_save_as_csv, flatten_all_json_and_save_as_csv, perform_eda_on_us_listings_data, flatten_to_csv_images, download_tar_file_images, extract_tar_file_images, up_load_us_listings_to_s3, merge_listings_images, copy_listings_tar_file, load_us_data_and_perform_eda, merge_listings_images
 
 
 # DAG definition
@@ -186,7 +186,8 @@ with DAG(
 
     merge_listings_image_df_task = PythonOperator(
         task_id="merge_listings_image_df_task",
-        python_callable=merge_listings_image_df_task,        
+        op_kwargs= {"local_dir": "listings/metadata/"},
+        python_callable=merge_listings_images,        
         provide_context=True,        
         trigger_rule='all_success',        
         dag=dag            

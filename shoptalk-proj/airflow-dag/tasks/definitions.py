@@ -19,7 +19,7 @@ import numpy as np
 #from sentence_transformers import SentenceTransformer
 
 from datetime import datetime, timedelta
-from config import LISTINGS_DOWNLOAD_PATH_URL, LOCAL_RAW_DATA_DIR, ALL_LISTINGS_DATA_CSV, US_ONLY_LISTINGS_CSV, US_ONLY_LISTINGS_FILTERED_V1_CSV, US_ONLY_LISTINGS_FILTERED_V2_CSV,  US_PRODUCT_IMAGE_MERGE_CSV, AWS_S3_BUCKET, LISTINGS_CSV_FILE_LOCATION, IMAGES_DOWNLOAD_PATH_URL,LOCAL_RAW_IMGS_DIR, IMAGES_CSV_FILE_LOCATION, IMAGES_CSV_FILE, TMP_LISTINGS_SOURCE, TAR_FILE_NAME
+from config import LISTINGS_DOWNLOAD_PATH_URL, LOCAL_RAW_DATA_DIR, ALL_LISTINGS_DATA_CSV, US_ONLY_LISTINGS_CSV, US_ONLY_LISTINGS_FILTERED_V1_CSV, US_ONLY_LISTINGS_FILTERED_V2_CSV,  US_PRODUCT_IMAGE_MERGE_CSV, AWS_S3_BUCKET, LISTINGS_CSV_FILE_LOCATION, IMAGES_DOWNLOAD_PATH_URL,LOCAL_RAW_IMGS_DIR, IMAGES_CSV_FILE_LOCATION, IMAGES_CSV_FILE, TMP_LISTINGS_SOURCE, TAR_FILE_NAME, US_ONLY_LISTINGS_IMAGES_MERGED_CSV
 
 #from s3_download import download_file_from_s3
 def download_tar_file(**kwargs):
@@ -435,7 +435,7 @@ def up_load_us_listings_to_s3():
 
     
 
-def merge_listings_images(**kwargs):
+def merge_listings_images(local_dir, **kwargs):
     # Read from local and merge
     
     ti = kwargs['ti']
@@ -449,7 +449,19 @@ def merge_listings_images(**kwargs):
     
     us_listings_csv_df = pd.read_csv(us_listings_filtered_file_csv)  
     images_csv_df = pd.read_csv(image_file_csv)      
-    merged_df = pd.merge(us_listings_csv_df, images_csv_df, left_on='main_image_id', right_on='image_id', how=left)
+    
+    merged_df = pd.merge(us_listings_csv_df, 
+                         images_csv_df, 
+                         left_on='main_image_id', 
+                         right_on='image_id', 
+                         how='left')
     print('Listings and Image data merged into one dataframe')
     print(merged_df.info())
+    ## Save to a file
+    directory_path = os.path.join(LOCAL_RAW_DATA_DIR,  local_dir)
+    all_US_listings_images_merged_v1_csv_file = directory_path +'/'+ US_ONLY_LISTINGS_IMAGES_MERGED_CSV
+    merged_df.to_csv(all_US_listings_images_merged_v1_csv_file, index=False)
+    
+    kwargs['ti'].xcom_push(key='all_US_listings_images_merged_v1_csv_file', value=all_US_listings_images_merged_v1_csv_file)
+    return all_US_listings_images_merged_v1_csv_file
     

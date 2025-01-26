@@ -29,7 +29,7 @@ import torch
 
 
 from datetime import datetime, timedelta
-from config import LISTINGS_DOWNLOAD_PATH_URL, LOCAL_RAW_DATA_DIR, ALL_LISTINGS_DATA_CSV, US_ONLY_LISTINGS_CSV, US_ONLY_LISTINGS_FILTERED_V1_CSV, US_ONLY_LISTINGS_FILTERED_V2_CSV,  US_PRODUCT_IMAGE_MERGE_CSV, AWS_S3_BUCKET, LISTINGS_CSV_FILE_LOCATION, IMAGES_DOWNLOAD_PATH_URL,LOCAL_RAW_IMGS_DIR, IMAGES_CSV_FILE_LOCATION, IMAGES_CSV_FILE, TMP_LISTINGS_SOURCE, TAR_FILE_NAME, US_ONLY_LISTINGS_IMAGES_MERGED_CSV, SMALL_IMAGE_HOME_PATH
+from config import LISTINGS_DOWNLOAD_PATH_URL, LOCAL_RAW_DATA_DIR, ALL_LISTINGS_DATA_CSV, US_ONLY_LISTINGS_CSV, US_ONLY_LISTINGS_FILTERED_V1_CSV, US_ONLY_LISTINGS_FILTERED_V2_CSV,  US_PRODUCT_IMAGE_MERGE_CSV, AWS_S3_BUCKET, LISTINGS_CSV_FILE_LOCATION, IMAGES_DOWNLOAD_PATH_URL,LOCAL_RAW_IMGS_DIR, IMAGES_CSV_FILE_LOCATION, IMAGES_CSV_FILE, TMP_LISTINGS_SOURCE, TAR_FILE_NAME, US_ONLY_LISTINGS_IMAGES_MERGED_CSV, SMALL_IMAGE_HOME_PATH, US_ONLY_LISTINGS_IMAGES_MERGED_CLEANED_CSV, US_ONLY_LISTINGS_IMAGES_MERGED_CAPTIONED_CSV
 
 #from s3_download import download_file_from_s3
 def download_tar_file(**kwargs):
@@ -261,11 +261,11 @@ def load_us_data_and_perform_eda(local_tmp_dir, **kwargs):
     
     US_DF_filtered = pd.concat([df_new2, lang_val_merge_df], axis=1)
     
-    # The following line applies for the entire of the dataset
+    # TODO:he following line applies for the entire of the dataset
     #drop_column_list1=['product_description_value','other_image_id_0', 'other_image_id_1', 'other_image_id_2', 'other_image_id_3', 'other_image_id_4', 'other_image_id_5', 'other_image_id_6', 'other_image_id_7', 'other_image_id_8', 'other_image_id_9', 'other_image_id_10', 'other_image_id_11', 'other_image_id_12', 'other_image_id_13', 'other_image_id_14', 'other_image_id_15', 'other_image_id_16', 'other_image_id_17', 'other_image_id_18', 'other_image_id_19', 'spin_id', '3dmodel_id', 'node_0_node_id', 'node_0_node_name', 'node_1_node_id', 'node_1_node_name', 'node_2_node_id', 'node_2_node_name', 'node_3_node_id', 'node_3_node_name', 'node_4_node_id', 'node_4_node_name', 'node_5_node_id', 'node_5_node_name', 'node_6_node_id', 'node_6_node_name', 'node_7_node_id', 'node_7_node_name', 'node_8_node_id', 'node_8_node_name', 'node_9_node_id', 'node_9_node_name', 'node_10_node_id', 'node_10_node_name']
     
     #The following like applies only to us_listings_9 and us_listings_a. Comment this out later.
-    drop_column_list1=['product_description_value','other_image_id_0', 'other_image_id_1', 'other_image_id_2', 'other_image_id_3', 'other_image_id_4', 'other_image_id_5', 'other_image_id_6', 'other_image_id_7', 'other_image_id_8', 'other_image_id_9', 'other_image_id_10', 'other_image_id_11', 'other_image_id_12', 'other_image_id_13', 'other_image_id_14', 'other_image_id_15',  'spin_id', '3dmodel_id', 'node_0_node_id', 'node_0_node_name', 'node_1_node_id', 'node_1_node_name', 'node_2_node_id', 'node_2_node_name', 'node_3_node_id', 'node_3_node_name', 'node_4_node_id', 'node_4_node_name', 'node_5_node_id', 'node_5_node_name', 'node_6_node_id', 'node_6_node_name', 'node_7_node_id', 'node_7_node_name', 'node_8_node_id', 'node_8_node_name']
+    drop_column_list1=['product_description_value','other_image_id_0', 'other_image_id_1', 'other_image_id_2', 'other_image_id_3', 'other_image_id_4', 'other_image_id_5', 'other_image_id_6', 'other_image_id_7', 'other_image_id_8', 'other_image_id_9', 'other_image_id_10', 'other_image_id_11', 'other_image_id_12', 'other_image_id_13', 'other_image_id_14','spin_id', '3dmodel_id', 'node_0_node_id', 'node_0_node_name', 'node_1_node_id', 'node_1_node_name', 'node_2_node_id', 'node_2_node_name', 'node_3_node_id', 'node_3_node_name', 'node_4_node_id', 'node_4_node_name', 'node_5_node_id', 'node_5_node_name', 'node_6_node_id', 'node_6_node_name', 'node_7_node_id', 'node_7_node_name', 'node_8_node_id', 'node_8_node_name']
     US_DF_filtered3= US_DF_filtered.drop(columns=drop_column_list1)
     
     
@@ -275,7 +275,7 @@ def load_us_data_and_perform_eda(local_tmp_dir, **kwargs):
     
     all_US_listings_filtered_v1_csv_file = directory_path +'/'+ US_ONLY_LISTINGS_FILTERED_V1_CSV
     US_DF_filtered4.to_csv(all_US_listings_filtered_v1_csv_file)
-    print(f"US_listings filtered data is saved to :{all_US_listings_filtered_v1_csv_file}") 
+    print(f"US_listdrings filtered data is saved to :{all_US_listings_filtered_v1_csv_file}") 
     
     kwargs['ti'].xcom_push(key='all_US_listings_filtered_v1_csv_file', value=all_US_listings_filtered_v1_csv_file)
     
@@ -477,6 +477,24 @@ def merge_listings_images(local_dir, **kwargs):
     return all_US_listings_images_merged_v1_csv_file
     
 
+
+def drop_if_image_file_missing(local_dir, **kwargs):
+    ti = kwargs['ti']
+    us_listings_filtered_file_csv = ti.xcom_pull(task_ids='merge_listings_image_df_task', key='all_US_listings_images_merged_v1_csv_file')  # Pulling from Task B
+    all_US_listings_images_merged_v1_csv_file = ti.xcom_pull(task_ids='flatten_to_csv_images', key='image_file_csv')  # Pulling from Task A
+    merged_df = pd.read_csv(all_US_listings_images_merged_v1_csv_file)
+    merged_df['full_path'] = merged_df['path'].apply(lambda x: os.path.join(SMALL_IMAGE_HOME_PATH, x.lstrip('/')))
+
+    # Filter rows where the full path exists
+    merged_df = merged_df[merged_df['full_path'].apply(os.path.exists)]
+    directory_path = os.path.join(LOCAL_RAW_DATA_DIR,  local_dir)
+    all_US_listings_images_merged_cleaned_v1_csv_file = directory_path +'/'+ US_ONLY_LISTINGS_IMAGES_MERGED_CLEANED_CSV
+    merged_df.to_csv(all_US_listings_images_merged_cleaned_v1_csv_file, index=False)
+    kwargs['ti'].xcom_push(key='all_US_listings_images_merged_cleaned_v1_csv_file', value=all_US_listings_images_merged_cleaned_v1_csv_file)
+    return all_US_listings_images_merged_cleaned_v1_csv_file
+
+
+
 def generate_image_captions(local_dir, **kwargs):
     if torch.cuda.is_available():
         print("CUDA is available! Using GPU for inference.")
@@ -488,9 +506,8 @@ def generate_image_captions(local_dir, **kwargs):
     print(f' DEVICE:{device}')
     ti = kwargs['ti']
     
-    us_listings_filtered_file_csv = ti.xcom_pull(task_ids='merge_listings_image_df_task', key='all_US_listings_images_merged_v1_csv_file')  # Pulling from Task B
-    all_US_listings_images_merged_v1_csv_file = ti.xcom_pull(task_ids='flatten_to_csv_images', key='image_file_csv')  # Pulling from Task A
-    merged_df = pd.read_csv(all_US_listings_images_merged_v1_csv_file)
+    all_US_listings_images_merged_cleaned_v1_csv_file = ti.xcom_pull(task_ids='merged_data_clean_up_task', key='all_US_listings_images_merged_cleaned_v1_csv_file')  # Pulling from Task A
+    merged_df = pd.read_csv(all_US_listings_images_merged_cleaned_v1_csv_file)
     
     # Pre-load the model and processor
     processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base")
@@ -500,6 +517,9 @@ def generate_image_captions(local_dir, **kwargs):
      # Batch size
     batch_size = 256  # Adjust according to your system's memory capacity
     print(f'SAMPLE PATH: {os.path.join(SMALL_IMAGE_HOME_PATH, merged_df.loc[5, "path"])}')
+    
+    # Move to Cuda device
+    model.to(device)
 
     # Process images in batches
     print(f'len(merged_df): {len(merged_df)}')
@@ -520,3 +540,10 @@ def generate_image_captions(local_dir, **kwargs):
             merged_df.loc[i:i + len(captions) - 1, 'caption'] = captions
         except (Image.UnidentifiedImageError, FileNotFoundError) as e:
             print(f"Error processing batch starting at index {i}: {e}")
+    
+    directory_path = os.path.join(LOCAL_RAW_DATA_DIR,  local_dir)
+    all_US_listings_images_captioned_v1_csv_file = directory_path +'/'+ US_ONLY_LISTINGS_IMAGES_MERGED_CAPTIONED_CSV
+    merged_df.to_csv(all_US_listings_images_captioned_v1_csv_file, index=False)
+    kwargs['ti'].xcom_push(key='all_US_listings_images_captioned_v1_csv_file', value=all_US_listings_images_captioned_v1_csv_file)
+    return all_US_listings_images_captioned_v1_csv_file
+

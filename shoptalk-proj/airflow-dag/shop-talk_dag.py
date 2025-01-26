@@ -22,7 +22,7 @@ from datetime import datetime, timedelta
 
 
 from config import LISTINGS_DOWNLOAD_PATH_URL, LOCAL_RAW_DATA_DIR, ALL_LISTINGS_DATA_CSV, US_ONLY_LISTINGS_CSV, US_PRODUCT_IMAGE_MERGE_CSV, AWS_S3_BUCKET, LISTINGS_CSV_FILE_LOCATION, IMAGES_DOWNLOAD_PATH_URL,LOCAL_RAW_IMGS_DIR, IMAGES_CSV_FILE_LOCATION, IMAGES_CSV_FILE, TMP_LISTINGS_SOURCE, TAR_FILE_NAME, TMP_IMAGE_DOWNLOAD_LOCATION, IMAGES_OBJECT_S3_KEY_ID
-from tasks.definitions import download_tar_file, extract_tar_file, flatten_each_json_and_save_as_csv, flatten_all_json_and_save_as_csv, perform_eda_on_us_listings_data, flatten_to_csv_images, download_tar_file_images, extract_tar_file_images, up_load_us_listings_to_s3, merge_listings_images, copy_listings_tar_file, load_us_data_and_perform_eda, merge_listings_images
+from tasks.definitions import download_tar_file, extract_tar_file, flatten_each_json_and_save_as_csv, flatten_all_json_and_save_as_csv, perform_eda_on_us_listings_data, flatten_to_csv_images, download_tar_file_images, extract_tar_file_images, up_load_us_listings_to_s3, merge_listings_images, copy_listings_tar_file, load_us_data_and_perform_eda, merge_listings_images, generate_image_captions
 
 
 # DAG definition
@@ -39,8 +39,8 @@ with DAG(
     start_date=datetime(2024, 1, 1),
     #schedule_interval="@daily",
     #schedule_interval="*/10 * * * *",  # Every 10 minutes
-    schedule_interval=timedelta(minutes=10),  # Every 10 minutes
-    max_active_runs=1,
+    schedule_interval=timedelta(minutes=1000),  # Every 10 minutes
+    max_active_runs=3,
     catchup=False,
 ) as dag:
 
@@ -139,6 +139,7 @@ with DAG(
     copy_images_to_local_folder_from_s3 = PythonOperator(
         task_id="copy_images_to_local_folder",
         python_callable=download_file_from_s3,
+        task_concurrency=2,
         op_kwargs={
                     "access_key": os.environ["AWS_ACCESS_KEY_ID"],
                     "secret_key": os.environ["AWS_SECRET_ACCESS_KEY"],
@@ -192,9 +193,22 @@ with DAG(
         trigger_rule='all_success',        
         dag=dag            
     )
+    
+    
+    
+    #
+    generate_image_captions_task = PythonOperator(
+        task_id="generate_image_captions_task",
+        op_kwargs= {"local_dir": "listings/metadata/"},
+        python_callable=generate_image_captions,        
+        provide_context=True,        
+        trigger_rule='all_success',        
+        dag=dag            
+    )
+    
     # [download_task >> extract_task >> flatten_all_json_and_save_as_csv >>upload_listings_to_s3, download_images_task >> extract_images_task >> flatten_images_metadata_task] >> merge_listings_image_df_task
 ## If we are downloading and extracting the tar
 #[download_task >> extract_task >> flatten_all_json_and_save_as_csv , download_images_task >> extract_images_task >> flatten_images_metadata_task] >> merge_listings_image_df_task
 
 ## If we are copying the tar file from local dir for minimal dataset
-[copy_listings_task >> extract_task >> flatten_all_json_and_save_US_data_as_csv >> load_us_data_and_perform_eda >> perform_eda_on_us_listings_data,  copy_images_to_local_folder_from_s3 >> copy_to_rawimage_folder >> extract_images_task >> flatten_images_metadata_task] >> merge_listings_image_df_task
+[copy_listings_task >> extract_task >> flatten_all_json_and_save_US_data_as_csv >> load_us_data_and_perform_eda >> perform_eda_on_us_listings_data,  copy_images_to_local_folder_from_s3 >> copy_to_rawimage_folder >> extract_images_task >> flatten_images_metadata_task] >> merge_listings_image_df_task >> generate_image_captions_task

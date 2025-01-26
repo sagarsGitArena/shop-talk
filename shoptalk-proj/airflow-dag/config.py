@@ -25,4 +25,7 @@ IMAGES_CSV_FILE_LOCATION="/opt/airflow/data/rawimages/images/metadata"
 IMAGES_CSV_FILE="images.csv"
 
 
+##########
+SMALL_IMAGE_HOME_PATH="/opt/airflow/data/rawimages/images/small/"
+
 

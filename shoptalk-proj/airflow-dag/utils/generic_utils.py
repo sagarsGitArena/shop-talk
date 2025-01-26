@@ -1,6 +1,7 @@
 
 import shutil
 import os
+from PIL import Image
 
 def copy_file( source_folder, destination_folder,file_name):   
 
@@ -31,3 +32,13 @@ def copy_file( source_folder, destination_folder,file_name):
     else:
         print(f"Error: [{source_file}] does not exist.")
     return result
+
+
+def generate_captions_batch(image_paths, device, processor, model):
+    """Generates captions for a batch of images."""
+    images = [Image.open(path).convert("RGB") for path in image_paths]
+    #inputs = processor(images=images, return_tensors="pt", padding=True)
+    inputs = processor(images=images, return_tensors="pt", padding=True).to(device)
+    output = model.generate(**inputs)
+    captions = [processor.decode(out, skip_special_tokens=True) for out in output]
+    return captions

@@ -11,15 +11,25 @@ import gzip
 import glob
 import json
 from utils.json_utils import flatten_json
-from utils.s3_utils import upload_file_to_s3
-from utils.generic_utils import copy_file
+from utils.s3_utils import upload_file_to_s3, download_file_from_s3
+from utils.generic_utils import copy_file, generate_captions_batch
 import re
 import numpy as np
 #import mlflow
 #from sentence_transformers import SentenceTransformer
 
+##### Captioning related
+import torch
+from transformers import BlipProcessor, BlipForConditionalGeneration
+import os
+from tqdm import tqdm
+from PIL import Image
+##################
+import torch
+
+
 from datetime import datetime, timedelta
-from config import LISTINGS_DOWNLOAD_PATH_URL, LOCAL_RAW_DATA_DIR, ALL_LISTINGS_DATA_CSV, US_ONLY_LISTINGS_CSV, US_ONLY_LISTINGS_FILTERED_V1_CSV, US_ONLY_LISTINGS_FILTERED_V2_CSV,  US_PRODUCT_IMAGE_MERGE_CSV, AWS_S3_BUCKET, LISTINGS_CSV_FILE_LOCATION, IMAGES_DOWNLOAD_PATH_URL,LOCAL_RAW_IMGS_DIR, IMAGES_CSV_FILE_LOCATION, IMAGES_CSV_FILE, TMP_LISTINGS_SOURCE, TAR_FILE_NAME, US_ONLY_LISTINGS_IMAGES_MERGED_CSV
+from config import LISTINGS_DOWNLOAD_PATH_URL, LOCAL_RAW_DATA_DIR, ALL_LISTINGS_DATA_CSV, US_ONLY_LISTINGS_CSV, US_ONLY_LISTINGS_FILTERED_V1_CSV, US_ONLY_LISTINGS_FILTERED_V2_CSV,  US_PRODUCT_IMAGE_MERGE_CSV, AWS_S3_BUCKET, LISTINGS_CSV_FILE_LOCATION, IMAGES_DOWNLOAD_PATH_URL,LOCAL_RAW_IMGS_DIR, IMAGES_CSV_FILE_LOCATION, IMAGES_CSV_FILE, TMP_LISTINGS_SOURCE, TAR_FILE_NAME, US_ONLY_LISTINGS_IMAGES_MERGED_CSV, SMALL_IMAGE_HOME_PATH
 
 #from s3_download import download_file_from_s3
 def download_tar_file(**kwargs):
@@ -461,7 +471,52 @@ def merge_listings_images(local_dir, **kwargs):
     directory_path = os.path.join(LOCAL_RAW_DATA_DIR,  local_dir)
     all_US_listings_images_merged_v1_csv_file = directory_path +'/'+ US_ONLY_LISTINGS_IMAGES_MERGED_CSV
     merged_df.to_csv(all_US_listings_images_merged_v1_csv_file, index=False)
+    print(f"CSV saved at: {all_US_listings_images_merged_v1_csv_file}")
     
     kwargs['ti'].xcom_push(key='all_US_listings_images_merged_v1_csv_file', value=all_US_listings_images_merged_v1_csv_file)
     return all_US_listings_images_merged_v1_csv_file
     
+
+def generate_image_captions(local_dir, **kwargs):
+    if torch.cuda.is_available():
+        print("CUDA is available! Using GPU for inference.")
+        device = torch.device("cuda")
+    else:
+        print("CUDA is not available. Using CPU for inference.")
+        device = torch.device("cpu")
+    
+    print(f' DEVICE:{device}')
+    ti = kwargs['ti']
+    
+    us_listings_filtered_file_csv = ti.xcom_pull(task_ids='merge_listings_image_df_task', key='all_US_listings_images_merged_v1_csv_file')  # Pulling from Task B
+    all_US_listings_images_merged_v1_csv_file = ti.xcom_pull(task_ids='flatten_to_csv_images', key='image_file_csv')  # Pulling from Task A
+    merged_df = pd.read_csv(all_US_listings_images_merged_v1_csv_file)
+    
+    # Pre-load the model and processor
+    processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base")
+    model = BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-base")
+    print(f'Processor :{processor}')
+    print(f'Model :{model}')
+     # Batch size
+    batch_size = 256  # Adjust according to your system's memory capacity
+    print(f'SAMPLE PATH: {os.path.join(SMALL_IMAGE_HOME_PATH, merged_df.loc[5, "path"])}')
+
+    # Process images in batches
+    print(f'len(merged_df): {len(merged_df)}')
+    for i in tqdm(range(0, len(merged_df), batch_size)):  
+        batch_paths = [
+            os.path.join(SMALL_IMAGE_HOME_PATH, merged_df.loc[idx, "path"])
+            for idx in range(i, min(i + batch_size, len(merged_df)))
+        ]      
+        batch_paths = [path for path in batch_paths if os.path.exists(path)]
+
+        # Generate captions for the batch
+        print(f' Paths list :[ {batch_paths}]')
+        try:            
+            images = [Image.open(path).convert("RGB") for path in batch_paths]
+            captions = generate_captions_batch(batch_paths, device, processor, model)
+            print(f'Generated Captions List [:{captions}]')
+        #     # Assign captions to the dataframe
+            merged_df.loc[i:i + len(captions) - 1, 'caption'] = captions
+        except (Image.UnidentifiedImageError, FileNotFoundError) as e:
+            print(f"Error processing batch starting at index {i}: {e}")

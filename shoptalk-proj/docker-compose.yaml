@@ -57,6 +57,7 @@ x-airflow-common:
   #image: ${AIRFLOW_IMAGE_NAME:-vasamsetty/shop-talk_airflow_image:v1.0}
 
   # build: .
+  runtime: nvidia
   environment:
     &airflow-common-env
     _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:- scikit-learn dvc dvc_s3}
@@ -75,6 +76,7 @@ x-airflow-common:
     AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
     AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
     REGION_NAME: ${REGION_NAME}
+    
 
     # yamllint disable rule:line-length
     # Use simple http server on scheduler for health checks
@@ -128,7 +130,7 @@ services:
     restart: always
 
   airflow-webserver:
-    <<: *airflow-common
+    <<: *airflow-common    
     command: webserver
     ports:
       - "8080:8080"
@@ -171,11 +173,21 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s
-    environment:
+    environment:      
       <<: *airflow-common-env
+      NVIDIA_VISIBLE_DEVICES: all  # Use all GPUs
       # Required to handle warm shutdown of the celery workers properly
       # See https://airflow.apache.org/docs/docker-stack/entrypoint.html#signal-propagation
       DUMB_INIT_SETSID: "0"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all  # Use all GPUs; specify a number if needed
+              capabilities: [gpu]
+    stdin_open: true  # For interactive terminal support (equivalent to -it)
+    tty: true    
     restart: always
     depends_on:
       <<: *airflow-common-depends-on

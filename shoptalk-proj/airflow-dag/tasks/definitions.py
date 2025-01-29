@@ -29,7 +29,7 @@ import torch
 
 
 from datetime import datetime, timedelta
-from config import LISTINGS_DOWNLOAD_PATH_URL, LOCAL_RAW_DATA_DIR, ALL_LISTINGS_DATA_CSV, US_ONLY_LISTINGS_CSV, US_ONLY_LISTINGS_FILTERED_V1_CSV, US_ONLY_LISTINGS_FILTERED_V2_CSV,  US_PRODUCT_IMAGE_MERGE_CSV, AWS_S3_BUCKET, LISTINGS_CSV_FILE_LOCATION, IMAGES_DOWNLOAD_PATH_URL,LOCAL_RAW_IMGS_DIR, IMAGES_CSV_FILE_LOCATION, IMAGES_CSV_FILE, TMP_LISTINGS_SOURCE, TAR_FILE_NAME, US_ONLY_LISTINGS_IMAGES_MERGED_CSV, SMALL_IMAGE_HOME_PATH, US_ONLY_LISTINGS_IMAGES_MERGED_CLEANED_CSV, US_ONLY_LISTINGS_IMAGES_MERGED_CAPTIONED_CSV
+from config import LISTINGS_DOWNLOAD_PATH_URL, LOCAL_RAW_DATA_DIR, ALL_LISTINGS_DATA_CSV, US_ONLY_LISTINGS_CSV, US_ONLY_LISTINGS_FILTERED_V1_CSV, US_ONLY_LISTINGS_FILTERED_V2_CSV,  US_PRODUCT_IMAGE_MERGE_CSV, AWS_S3_BUCKET, LISTINGS_CSV_FILE_LOCATION, IMAGES_DOWNLOAD_PATH_URL,LOCAL_RAW_IMGS_DIR, IMAGES_CSV_FILE_LOCATION, IMAGES_CSV_FILE, TMP_LISTINGS_SOURCE, TAR_FILE_NAME, US_ONLY_LISTINGS_IMAGES_MERGED_CSV, SMALL_IMAGE_HOME_PATH, US_ONLY_LISTINGS_IMAGES_MERGED_CLEANED_CSV, US_ONLY_LISTINGS_IMAGES_MERGED_CAPTIONED_CSV, CAPTIONED_CSV_FILE_S3_LOCATION
 
 #from s3_download import download_file_from_s3
 def download_tar_file(**kwargs):
@@ -547,3 +547,17 @@ def generate_image_captions(local_dir, **kwargs):
     kwargs['ti'].xcom_push(key='all_US_listings_images_captioned_v1_csv_file', value=all_US_listings_images_captioned_v1_csv_file)
     return all_US_listings_images_captioned_v1_csv_file
 
+def upload_captions_to_s3(access_key, secret_key, bucket_name, local_dir, **kwargs):
+     
+     ti = kwargs['ti']
+
+     all_US_listings_images_captioned_v1_csv_file = ti.xcom_pull(task_ids='generate_image_captions_task', key='all_US_listings_images_captioned_v1_csv_file')  # Pulling from Task A
+     
+     directory_path = os.path.join(LOCAL_RAW_DATA_DIR, local_dir)
+    # file_name = "all_US_listings_images_captioned_v1.csv"  # Ensure the correct file name
+     #file_path = os.path.join(CAPTIONED_CSV_FILE_S3_LOCATION, all_US_listings_images_captioned_v1_csv_file)
+     s3_object_key = f"{CAPTIONED_CSV_FILE_S3_LOCATION}{US_ONLY_LISTINGS_IMAGES_MERGED_CAPTIONED_CSV}"
+     print(f"path:{all_US_listings_images_captioned_v1_csv_file}")
+     upload_file_to_s3(access_key, secret_key, bucket_name, s3_object_key, all_US_listings_images_captioned_v1_csv_file)
+
+    

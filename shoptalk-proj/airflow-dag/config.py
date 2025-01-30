@@ -21,6 +21,9 @@ US_PRODUCT_IMAGE_MERGE_CSV="us_product_image_merged.csv"
 LISTINGS_CSV_FILE_LOCATION="/opt/airflow/data/raw/listings/metadata/"
 AWS_S3_BUCKET="sagar-poc-bucket"
 CAPTIONED_CSV_FILE_S3_LOCATION="captioned_data/"
+S3_CAPTIONED_OBJECT_KEY="captioned_data/us_listings_images_merged_captioned_v1.csv"
+FAISS_API_ENDPOINT="http://vector-db-service:8000/load_data_file_from_s3"
+
 
 IMAGES_DOWNLOAD_PATH_URL="https://amazon-berkeley-objects.s3.amazonaws.com/archives/abo-images-small.tar"
 LOCAL_RAW_IMGS_DIR="/opt/airflow/data/rawimages"

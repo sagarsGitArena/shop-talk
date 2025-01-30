@@ -4,6 +4,8 @@ import requests
 import pandas as pd
 from airflow import DAG
 from airflow.operators.python import PythonOperator
+from airflow.sensors.s3_key_sensor import S3KeySensor
+from airflow.providers.http.operators.http import SimpleHttpOperator
 from datetime import datetime
 import shutil
 import gzip
@@ -21,7 +23,7 @@ import numpy as np
 from datetime import datetime, timedelta
 
 
-from config import LISTINGS_DOWNLOAD_PATH_URL, LOCAL_RAW_DATA_DIR, ALL_LISTINGS_DATA_CSV, US_ONLY_LISTINGS_CSV, US_PRODUCT_IMAGE_MERGE_CSV, AWS_S3_BUCKET, LISTINGS_CSV_FILE_LOCATION, IMAGES_DOWNLOAD_PATH_URL,LOCAL_RAW_IMGS_DIR, IMAGES_CSV_FILE_LOCATION, IMAGES_CSV_FILE, TMP_LISTINGS_SOURCE, TAR_FILE_NAME, TMP_IMAGE_DOWNLOAD_LOCATION, IMAGES_OBJECT_S3_KEY_ID
+from config import LISTINGS_DOWNLOAD_PATH_URL, LOCAL_RAW_DATA_DIR, ALL_LISTINGS_DATA_CSV, US_ONLY_LISTINGS_CSV, US_PRODUCT_IMAGE_MERGE_CSV, AWS_S3_BUCKET, LISTINGS_CSV_FILE_LOCATION, IMAGES_DOWNLOAD_PATH_URL,LOCAL_RAW_IMGS_DIR, IMAGES_CSV_FILE_LOCATION, IMAGES_CSV_FILE, TMP_LISTINGS_SOURCE, TAR_FILE_NAME, TMP_IMAGE_DOWNLOAD_LOCATION, IMAGES_OBJECT_S3_KEY_ID, S3_CAPTIONED_OBJECT_KEY, FAISS_API_ENDPOINT
 from tasks.definitions import download_tar_file, extract_tar_file, flatten_each_json_and_save_as_csv, flatten_all_json_and_save_as_csv, perform_eda_on_us_listings_data, flatten_to_csv_images, download_tar_file_images, extract_tar_file_images, up_load_us_listings_to_s3, merge_listings_images, copy_listings_tar_file, load_us_data_and_perform_eda, merge_listings_images, generate_image_captions, drop_if_image_file_missing, upload_captions_to_s3
 
 
@@ -229,9 +231,39 @@ with DAG(
         dag=dag            
     )
     
+    check_if_data_file_arrived_task = S3KeySensor(
+        task_id='check_if_data_file_arrived',
+        poke_interval=10,  # Check for file every 60 seconds
+        timeout=600,  # Timeout if file not found after 600 seconds
+        bucket_key=S3_CAPTIONED_OBJECT_KEY,  # Update with your S3 path
+        bucket_name=AWS_S3_BUCKET,
+        aws_conn_id="aws_default",
+        mode='poke',
+        dag=dag,
+    )
+
+    load_faiss_vector_db_task = SimpleHttpOperator(
+        task_id='load_faiss_vector_db_task',
+        method='POST',
+        http_conn_id=None,  # Define this connection in Airflow's Connection UI
+        endpoint=FAISS_API_ENDPOINT,
+        data=json.dumps({
+            's3_bucket_name': AWS_S3_BUCKET,
+            'aws_access_key': os.environ["AWS_ACCESS_KEY_ID"],
+            'aws_secret_key': os.environ["AWS_SECRET_ACCESS_KEY"],
+            's3_object_key': S3_CAPTIONED_OBJECT_KEY
+        }),
+        headers={"Content-Type": "application/json"},
+        response_check=lambda response: response.status_code == 200,  # Check success status
+        extra_options={"timeout": 500},  # Timeout of 5 minutes -- Shouldn't take more than 3 mins
+    
+    )
+    
+    
     # [download_task >> extract_task >> flatten_all_json_and_save_as_csv >>upload_listings_to_s3, download_images_task >> extract_images_task >> flatten_images_metadata_task] >> merge_listings_image_df_task
 ## If we are downloading and extracting the tar
 #[download_task >> extract_task >> flatten_all_json_and_save_as_csv , download_images_task >> extract_images_task >> flatten_images_metadata_task] >> merge_listings_image_df_task
 
 ## If we are copying the tar file from local dir for minimal dataset
-[copy_listings_task >> extract_task >> flatten_all_json_and_save_US_data_as_csv >> load_us_data_and_perform_eda >> perform_eda_on_us_listings_data,  copy_images_to_local_folder_from_s3 >> copy_to_rawimage_folder >> extract_images_task >> flatten_images_metadata_task] >> merge_listings_image_df_task >> merged_data_clean_up_task >> generate_image_captions_task >> upload_captions_to_s3_task
+#[copy_listings_task >> extract_task >> flatten_all_json_and_save_US_data_as_csv >> load_us_data_and_perform_eda >> perform_eda_on_us_listings_data,  copy_images_to_local_folder_from_s3 >> copy_to_rawimage_folder >> extract_images_task >> flatten_images_metadata_task] >> merge_listings_image_df_task >> merged_data_clean_up_task >> generate_image_captions_task >> upload_captions_to_s3_task >> check_if_data_file_arrived_task
+[check_if_data_file_arrived_task >> load_faiss_vector_db_task]

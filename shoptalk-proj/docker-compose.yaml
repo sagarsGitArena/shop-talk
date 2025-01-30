@@ -54,6 +54,8 @@ x-airflow-common:
   
   #image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.7.2}  
   image: ${AIRFLOW_IMAGE_NAME:-vasamsetty/airflow-urllib3_1.26.17:latest}
+  networks:
+    - shared_network
   #image: ${AIRFLOW_IMAGE_NAME:-vasamsetty/shop-talk_airflow_image:v1.0}
 
   # build: .
@@ -104,6 +106,8 @@ x-airflow-common:
 services:
   postgres:
     image: postgres:13
+    networks:
+      - shared_network
     environment:
       POSTGRES_USER: airflow
       POSTGRES_PASSWORD: airflow
@@ -119,6 +123,8 @@ services:
 
   redis:
     image: redis:latest
+    networks:
+      - shared_network
     expose:
       - 6379
     healthcheck:
@@ -321,6 +327,21 @@ services:
       <<: *airflow-common-depends-on
       airflow-init:
         condition: service_completed_successfully
+
+  ## Add faiss to existing airflow     
+  vector-db-service:
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+    build:
+      context: ./vector_db_service
+    ports:
+      - "5050:8000"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:5050/ || exit 1"]  # Check API availability
+      interval: 10s            # Interval between health checks
+      timeout: 5s              # Maximum allowed time for a single check
+      retries: 3
 
 volumes:
   postgres-db-volume:

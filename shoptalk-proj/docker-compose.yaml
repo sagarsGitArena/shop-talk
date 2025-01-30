@@ -330,6 +330,8 @@ services:
 
   ## Add faiss to existing airflow     
   vector-db-service:
+    networks:
+      - shared_network
     runtime: nvidia
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
@@ -342,6 +344,17 @@ services:
       interval: 10s            # Interval between health checks
       timeout: 5s              # Maximum allowed time for a single check
       retries: 3
+    restart: always
+    container_name: vector-db-service
+    volumes:
+      - ./data:/app/data
+      - ./vector_database/faiss_db:/app/vector_database/faiss_db
+      - ./vector_database/chroma_db:/app/vector_database/chroma_db
 
 volumes:
   postgres-db-volume:
+
+networks:
+  shared_network:
+    driver: bridge
+

@@ -12,7 +12,7 @@ import glob
 import json
 from utils.json_utils import flatten_json
 from utils.s3_utils import upload_file_to_s3, download_file_from_s3
-from utils.generic_utils import copy_file, generate_captions_batch
+from utils.generic_utils import copy_file, generate_captions_batch, validate_and_get_image_path
 import re
 import numpy as np
 #import mlflow
@@ -478,34 +478,36 @@ def merge_listings_images(local_dir, **kwargs):
     
 
 
+
+    
+
+
+
 def drop_if_image_file_missing(local_dir, **kwargs):
     ti = kwargs['ti']
     all_US_listings_images_merged_v1_csv_file = ti.xcom_pull(task_ids='merge_listings_image_df_task', key='all_US_listings_images_merged_v1_csv_file')  # Pulling from Task B
-    image_file_csv = ti.xcom_pull(task_ids='flatten_to_csv_images', key='image_file_csv')  # Pulling from Task A
     merged_df = pd.read_csv(all_US_listings_images_merged_v1_csv_file)
-    image_df= pd.read_csv(image_file_csv)
-    # merged_df = merged_df.merge(image_df, on='image_id', how='left')
-    # merged_df.rename(columns={'path': 'image_path'}, inplace=True)
     print(f'==================')
     print(merged_df.info())
     print(f'==================')
-    
-    print(f'==================')
-    print(image_df.info())
-    print(f'==================')
-    
-    merged_df['image_path'] = image_df['path'].apply(lambda x: os.path.join(SMALL_IMAGE_HOME_PATH, x.lstrip('/')))
 
+    # Use a lambda function to pass both parameters
+    merged_df['tmp_image_path'] = merged_df['path'].apply(lambda postfix_path: validate_and_get_image_path(SMALL_IMAGE_HOME_PATH, postfix_path))
 
-    # Filter rows where the full path exists
-    merged_df = merged_df[merged_df['image_path'].apply(os.path.exists)]
+    # Drop rows where tmp_image_path is None (invalid images)
+    filtered_df = merged_df.dropna(subset=['tmp_image_path'])
+
+    print(f'==================')
+    print(filtered_df.info())
+    print(f'==================')   
+
     
     directory_path = os.path.join(LOCAL_RAW_DATA_DIR,  local_dir)
     all_US_listings_images_merged_cleaned_v1_csv_file = directory_path +'/'+ US_ONLY_LISTINGS_IMAGES_MERGED_CLEANED_CSV
-    merged_df.to_csv(all_US_listings_images_merged_cleaned_v1_csv_file, index=False)
+    filtered_df.to_csv(all_US_listings_images_merged_cleaned_v1_csv_file, index=False)
     kwargs['ti'].xcom_push(key='all_US_listings_images_merged_cleaned_v1_csv_file', value=all_US_listings_images_merged_cleaned_v1_csv_file)
     print(f'==================')
-    print(merged_df.info())
+    print(filtered_df.info())
     print(f'==================')
     return all_US_listings_images_merged_cleaned_v1_csv_file
 

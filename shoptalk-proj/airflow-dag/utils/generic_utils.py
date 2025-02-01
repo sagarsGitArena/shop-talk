@@ -42,3 +42,9 @@ def generate_captions_batch(image_paths, device, processor, model):
     output = model.generate(**inputs)
     captions = [processor.decode(out, skip_special_tokens=True) for out in output]
     return captions
+
+# Function that check and returns the valid path
+def validate_and_get_image_path(prefix_path, postfix_path):
+    fullpath = os.path.join(prefix_path, postfix_path)
+    if os.path.exists(fullpath):
+        return fullpath

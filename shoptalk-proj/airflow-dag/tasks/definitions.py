@@ -480,17 +480,33 @@ def merge_listings_images(local_dir, **kwargs):
 
 def drop_if_image_file_missing(local_dir, **kwargs):
     ti = kwargs['ti']
-    us_listings_filtered_file_csv = ti.xcom_pull(task_ids='merge_listings_image_df_task', key='all_US_listings_images_merged_v1_csv_file')  # Pulling from Task B
-    all_US_listings_images_merged_v1_csv_file = ti.xcom_pull(task_ids='flatten_to_csv_images', key='image_file_csv')  # Pulling from Task A
+    all_US_listings_images_merged_v1_csv_file = ti.xcom_pull(task_ids='merge_listings_image_df_task', key='all_US_listings_images_merged_v1_csv_file')  # Pulling from Task B
+    image_file_csv = ti.xcom_pull(task_ids='flatten_to_csv_images', key='image_file_csv')  # Pulling from Task A
     merged_df = pd.read_csv(all_US_listings_images_merged_v1_csv_file)
-    merged_df['full_path'] = merged_df['path'].apply(lambda x: os.path.join(SMALL_IMAGE_HOME_PATH, x.lstrip('/')))
+    image_df= pd.read_csv(image_file_csv)
+    # merged_df = merged_df.merge(image_df, on='image_id', how='left')
+    # merged_df.rename(columns={'path': 'image_path'}, inplace=True)
+    print(f'==================')
+    print(merged_df.info())
+    print(f'==================')
+    
+    print(f'==================')
+    print(image_df.info())
+    print(f'==================')
+    
+    merged_df['image_path'] = image_df['path'].apply(lambda x: os.path.join(SMALL_IMAGE_HOME_PATH, x.lstrip('/')))
+
 
     # Filter rows where the full path exists
-    merged_df = merged_df[merged_df['full_path'].apply(os.path.exists)]
+    merged_df = merged_df[merged_df['image_path'].apply(os.path.exists)]
+    
     directory_path = os.path.join(LOCAL_RAW_DATA_DIR,  local_dir)
     all_US_listings_images_merged_cleaned_v1_csv_file = directory_path +'/'+ US_ONLY_LISTINGS_IMAGES_MERGED_CLEANED_CSV
     merged_df.to_csv(all_US_listings_images_merged_cleaned_v1_csv_file, index=False)
     kwargs['ti'].xcom_push(key='all_US_listings_images_merged_cleaned_v1_csv_file', value=all_US_listings_images_merged_cleaned_v1_csv_file)
+    print(f'==================')
+    print(merged_df.info())
+    print(f'==================')
     return all_US_listings_images_merged_cleaned_v1_csv_file
 
 
@@ -508,7 +524,9 @@ def generate_image_captions(local_dir, **kwargs):
     
     all_US_listings_images_merged_cleaned_v1_csv_file = ti.xcom_pull(task_ids='merged_data_clean_up_task', key='all_US_listings_images_merged_cleaned_v1_csv_file')  # Pulling from Task A
     merged_df = pd.read_csv(all_US_listings_images_merged_cleaned_v1_csv_file)
-    
+    print(f'======================')
+    print(merged_df.info())
+    print(f'======================')
     # Pre-load the model and processor
     processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base")
     model = BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-base")
@@ -516,7 +534,7 @@ def generate_image_captions(local_dir, **kwargs):
     print(f'Model :{model}')
      # Batch size
     batch_size = 256  # Adjust according to your system's memory capacity
-    print(f'SAMPLE PATH: {os.path.join(SMALL_IMAGE_HOME_PATH, merged_df.loc[5, "path"])}')
+   # print(f'SAMPLE PATH: {os.path.join(SMALL_IMAGE_HOME_PATH, merged_df.loc[5, "image_path"])}')
     
     # Move to Cuda device
     model.to(device)
@@ -544,6 +562,9 @@ def generate_image_captions(local_dir, **kwargs):
     directory_path = os.path.join(LOCAL_RAW_DATA_DIR,  local_dir)
     all_US_listings_images_captioned_v1_csv_file = directory_path +'/'+ US_ONLY_LISTINGS_IMAGES_MERGED_CAPTIONED_CSV
     merged_df.to_csv(all_US_listings_images_captioned_v1_csv_file, index=False)
+    print(f'======================')
+    print(merged_df.info())
+    print(f'======================')
     kwargs['ti'].xcom_push(key='all_US_listings_images_captioned_v1_csv_file', value=all_US_listings_images_captioned_v1_csv_file)
     return all_US_listings_images_captioned_v1_csv_file
 
@@ -560,4 +581,5 @@ def upload_captions_to_s3(access_key, secret_key, bucket_name, local_dir, **kwar
      print(f"path:{all_US_listings_images_captioned_v1_csv_file}")
      upload_file_to_s3(access_key, secret_key, bucket_name, s3_object_key, all_US_listings_images_captioned_v1_csv_file)
 
+    
     

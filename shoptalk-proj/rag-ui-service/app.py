@@ -11,6 +11,8 @@ import openai
 import os
 import requests
 
+from config import REVERSE_STRING_API_ENDPOINT
+
 # Gradio Interface
 with gr.Blocks() as app:
     gr.Markdown("## ShopTalk - Your Personal Shopping Assistant")
@@ -39,8 +41,8 @@ with gr.Blocks() as app:
 
 #VECTOR_DB_HOST = os.getenv("VECTOR_DB_HOST", "http://vector-db-service:8000/string-reverse")
 def reverse_text(input_text):       
-    #api_url = VECTOR_DB_HOST
-    api_url='http://vector-db-service:8000/string-reverse'
+    api_url = REVERSE_STRING_API_ENDPOINT
+    #api_url='http://vector-db-service:8000/string-reverse'
     print(f'api_url: {api_url}')
     payload = {"text": input_text}
 

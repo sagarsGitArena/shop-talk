@@ -1,0 +1,1 @@
+REVERSE_STRING_API_ENDPOINT='http://vector-db-service:8000/string-reverse'

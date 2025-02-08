@@ -364,7 +364,7 @@ services:
     environment:
       - VECTOR_DB_HOST="http://vector-db-service:8000"
       - NVIDIA_VISIBLE_DEVICES=all
-    container_name: rag-ui-service
+    container_name: shoptalk-ui-service
 
 volumes:
   postgres-db-volume:

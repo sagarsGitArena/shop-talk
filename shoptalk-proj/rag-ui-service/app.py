@@ -9,8 +9,6 @@ from langchain_community.chat_models import ChatOpenAI
 
 import openai
 import os
-os.environ["OPENAI_API_KEY"] = "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"
-openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # Gradio Interface
 with gr.Blocks() as app:

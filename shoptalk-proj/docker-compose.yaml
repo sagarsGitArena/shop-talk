@@ -338,7 +338,7 @@ services:
     build:
       context: ./vector_db_service
     ports:
-      - "5050:8000"
+      - "8000:8000"
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:5050/ || exit 1"]  # Check API availability
       interval: 10s            # Interval between health checks
@@ -350,6 +350,21 @@ services:
       - ./data:/app/data
       - ./vector_database/faiss_db:/app/vector_database/faiss_db
       - ./vector_database/chroma_db:/app/vector_database/chroma_db
+  
+  rag-ui-service:
+    networks:
+      - shared_network
+    runtime: nvidia
+    build:
+      context: ./rag-ui-service
+    ports:
+      - "7860:7860"
+    depends_on:
+      - vector-db-service
+    environment:
+      - VECTOR_DB_HOST="http://vector-db-service:8000"
+      - NVIDIA_VISIBLE_DEVICES=all
+    container_name: rag-ui-service
 
 volumes:
   postgres-db-volume:

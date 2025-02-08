@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 import faiss
 import numpy as np
 import cupy  # CuPy to support GPU operations
@@ -8,6 +8,8 @@ import pandas as pd
 import json
 import logging
 from sentence_transformers import SentenceTransformer
+import requests
+
 
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -31,23 +33,238 @@ res = faiss.StandardGpuResources()  # Initialize GPU resources
 index_cpu = faiss.IndexFlatL2(dimension)  # Create index on CPU
 index_gpu = faiss.index_cpu_to_gpu(res, 0, index_cpu)  # Move index to GPU
 
+# Load FAISS index and metadata
+def load_faiss_index():
+    local_index_bin_file_path = os.path.join(FAISS_LOCAL_DB_STORE, FAISS_INDEX_BIN_FILE)
+    local_json_metadata_file_path = os.path.join(FAISS_LOCAL_DB_STORE, FAISS_METADATA_JSON_FILE)
+
+    # Load FAISS index
+    index = faiss.read_index(local_index_bin_file_path)
+
+    # Load metadata
+    with open(local_json_metadata_file_path, "r") as f:
+        metadata = json.load(f)
+
+    return index, metadata
+
+# Load CSV metadata
+def load_metadata():
+    metadata_csv_path = 'shoptalk-proj/data/us_listings_images_merged_captioned_v1.csv'
+    try:
+        return pd.read_csv(metadata_csv_path)
+    except FileNotFoundError:
+        print(f"Error: The file at {metadata_csv_path} was not found.")
+        return None
+    except pd.errors.EmptyDataError:
+        print("Error: The file is empty.")
+        return None
+    except pd.errors.ParserError:
+        print("Error: The file could not be parsed.")
+        return None
+
+# Load FAISS index and metadata
+def load_faiss_index_and_metadata():
+    # Load FAISS index
+    index = faiss.read_index('shoptalk-proj/vector_database/faiss_db/faiss_index.bin')
+    
+    # Load metadata
+    with open('shoptalk-proj/vector_database/faiss_db/faiss_metadata.json', 'r') as f:
+        metadata = json.load(f)
+    
+    return index, metadata
+
+def search_index(query_vector, index, metadata, k=5):
+    # Ensure the query vector is a NumPy array with dtype float32
+    query_vector = np.array(query_vector).astype('float32').reshape(1, -1)
+
+    # Perform the search
+    distances, indices = index.search(query_vector, k)
+
+    # Retrieve the metadata for the nearest neighbors
+    results = []
+    for idx in indices[0]:
+        item_id = str(idx)
+        if item_id in metadata:
+            results.append(metadata[item_id])
+        else:
+            results.append({'item_id': item_id, 'message': 'Metadata not found'})
+
+    return results
+
+
+# Function to perform similarity search
+def search_faiss_index(query_vector, index, k=5):
+    distances, indices = index.search(query_vector, k)
+    return distances[0], indices[0]
+
+def fetch_data_from_api(endpoint):
+    try:
+        response = requests.get(endpoint)
+        response.raise_for_status()  # Raise an exception for HTTP errors
+        return response.json()  # Assuming the API returns JSON data
+    except requests.exceptions.RequestException as e:
+        st.error(f"Error fetching data from API: {e}")
+        return None
+
+
 @app.route("/")
 def home():
+     
     return jsonify({"message": "FAISS GPU Service is running!"})
 
-@app.route("/add", methods=["POST"])
+@app.route("/add", methods=["GET", "POST"])
 def add_vectors():
-    vectors = np.array(request.json["vectors"]).astype("float32")
-    # Add vectors to the GPU index
-    index_gpu.add(vectors)
-    return jsonify({"message": "Vectors added successfully!"})
+    if request.method == "POST":
+        return jsonify({"message": "Vectors added successfully!"})
+    else:
+        return jsonify({"message": "Send a POST request to add vectors."})
 
-@app.route("/search", methods=["POST"])
+
+@app.route("/search", methods=["GET", "POST"])
 def search_vectors():
-    query = np.array(request.json["query"]).astype("float32")
-    k = request.json.get("k", 5)  # Number of neighbors
-    distances, indices = index_gpu.search(query, k)  # Perform search on GPU index
-    return jsonify({"distances": distances.tolist(), "indices": indices.tolist()})
+    jsonify({"message": "In search added successfully!"})
+   # Your data to send in the request
+    data = request.get_json()
+
+    # Set the headers
+    headers = {'Content-Type': 'application/json'}
+
+    # Make the POST request with JSON data
+    #response = requests.post('http://example.com/api', headers=headers, data=json.dumps(data))
+    
+   
+    # Static query prompt (replace later with dynamic input)
+    #user_query = "High-back executive office chair with 360 degree"
+    user_query = data.get("prompt", "")
+    # Load metadata CSV
+    #df = load_metadata()
+    # Define the file path
+    #print("Current Working Directory:", os.getcwd())
+    file_path = "us_listings_images_merged_captioned_v1.csv"
+
+    # Read the CSV into a DataFrame
+    df = pd.read_csv(file_path)
+    column_names = df.columns
+    print(column_names)
+    # Convert DataFrame to HTML
+    #table_html = df.to_html(classes='data', header="true", index=False)
+    #return render_template('table.html', table=table_html)
+    # Display first few rows
+    #print(df.head())
+    if df is None:
+        return jsonify({"error": "Metadata CSV not found"}), 400
+
+    df['concatenated_desc'] = df['caption'].astype(str)+" "+ df['bullet_point_value'].astype(str)
+
+     # Initialize the model for embeddings
+    model = SentenceTransformer('all-MiniLM-L6-v2')
+
+    # Generate embeddings and add them as a column
+    df['embeddings'] =df['concatenated_desc'].apply(lambda desc: model.encode(desc).astype('float32'))
+
+    # Get the dimension of embeddings (depends on the model used)
+    embedding_dim = len(df['embeddings'][0])
+     # Parameters for IVF-PQ index
+    nlist = 100  # Number of clusters (inverted lists), tune based on dataset size
+    m = 8        # Number of sub-quantizers
+    nbits = 8    # Bits per sub-quantizer (for 256 centroids per sub-vector)
+
+    
+    # Create an IVF-PQ index with Euclidean distance metric
+    quantizer = faiss.IndexFlatL2(embedding_dim)  # Underlying index for quantization
+    index = faiss.IndexIVFPQ(quantizer, embedding_dim, nlist, m, nbits)
+
+
+    # Train the index on embeddings (required for IVF-PQ)
+    embeddings_array = np.stack(df['embeddings'].values)
+    index.train(embeddings_array)
+    
+    # Dictionary to map FAISS index to item_id
+    faiss_to_item_id = {}
+
+     # Populate FAISS and store metadata by item_id
+    metadata = {}
+    for i, row in df.iterrows():
+        embedding = np.array(row['embeddings'], dtype='float32').reshape(1, -1)
+        index.add(embedding)  # Add embedding to FAISS
+
+        # Store metadata using item_id as key
+        item_id = row['item_id']
+        metadata[item_id] =  {
+            "item_id": row['item_id'],
+            "item_weight_0_normalized_value_unit": row['item_weight_0_normalized_value_unit'],
+            "item_weight_0_normalized_value_value": row['item_weight_0_normalized_value_value'],
+            "item_weight_0_unit": row['item_weight_0_unit'],
+            "item_weight_0_value": row['item_weight_0_value'],
+            "model_number_0_value": row['model_number_0_value'],
+            "product_type_0_value": row['product_type_0_value'],
+            "main_image_id": row['main_image_id'],
+            "color_code_0": row['color_code_0'],
+            "country": row['country'],
+            "marketplace": row['marketplace'],
+            "domain_name": row['domain_name'],
+            "item_dimensions_height_normalized_value_unit": row['item_dimensions_height_normalized_value_unit'],
+            "item_dimensions_height_normalized_value_value": row['item_dimensions_height_normalized_value_value'],
+            "item_dimensions_height_unit": row['item_dimensions_height_unit'],
+            "item_dimensions_height_value": row['item_dimensions_height_value'],
+            "item_dimensions_length_normalized_value_unit": row['item_dimensions_length_normalized_value_unit'],
+            "item_dimensions_length_normalized_value_value": row['item_dimensions_length_normalized_value_value'],
+            "item_dimensions_length_unit": row['item_dimensions_length_unit'],
+            "item_dimensions_length_value": row['item_dimensions_length_value'],
+            "item_dimensions_width_normalized_value_unit": row['item_dimensions_width_normalized_value_unit'],
+            "item_dimensions_width_normalized_value_value": row['item_dimensions_width_normalized_value_value'],
+            "item_dimensions_width_unit": row['item_dimensions_width_unit'],
+            "item_dimensions_width_value": row['item_dimensions_width_value'],
+            "model_year_0_value": row['model_year_0_value'],
+            "style_value": row['style_value'],
+            "item_shape_value": row['item_shape_value'],
+            "pattern_value": row['pattern_value'],
+            "fabric_type_value": row['fabric_type_value'],
+            "item_name_value": row['item_name_value'],
+            "material_value": row['material_value'],
+            "item_keywords_value": row['item_keywords_value'],
+            "finish_type_value": row['finish_type_value'],
+            "model_name_value": row['model_name_value'],
+            "bullet_point_value": row['bullet_point_value'],
+            "color_value": row['color_value'],
+            "brand_value": row['brand_value'],
+            "Price": row['Price'],
+            "caption": row['caption'],
+            "concatenated_desc": row['concatenated_desc']
+        }
+
+            # Map FAISS index to item_id
+        faiss_to_item_id[index.ntotal - 1] = item_id  # Current FAISS index
+    
+           
+    jsonify({"status": "success", "message": "Embeddings processed and loaded to FAISS!"}), 200
+    
+   # Encode the user query to get its embedding
+    query_embedding = model.encode(user_query).astype('float32').reshape(1, -1)
+
+    # Number of top results to retrieve
+    k = 5
+
+    # Perform the search in the FAISS index
+    distances, indices = index.search(query_embedding, k)
+
+    # Retrieve the metadata for the top k results
+    #top_k_results = []
+    #for idx in indices[0]:
+    #    item_id = faiss_to_item_id[idx]
+    #    item_metadata = metadata.get(item_id, {})
+    #   top_k_results.append(item_metadata)
+
+    # Return the results as a JSON response
+    #return jsonify({"query": user_query, "results": top_k_results}), 200
+
+    # Retrieve the item_ids for the top k results
+    top_k_item_ids = [faiss_to_item_id[idx] for idx in indices[0]]
+
+    # Return the results as a JSON response
+    return jsonify({"query": user_query, "top_k_item_ids": top_k_item_ids}), 200
+
+
 
 @app.route("/load_data_file_from_s3", methods=["POST"])
 def embed_description_and_load_vectors():
@@ -188,4 +405,4 @@ def embed_description_and_load_vectors():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000)
+    app.run(host="0.0.0.0", port=8000, debug=True)

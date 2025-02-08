@@ -23,6 +23,7 @@ AWS_S3_BUCKET="sagar-poc-bucket"
 CAPTIONED_CSV_FILE_S3_LOCATION="captioned_data/"
 S3_CAPTIONED_OBJECT_KEY="captioned_data/us_listings_images_merged_captioned_v1.csv"
 FAISS_API_ENDPOINT="http://vector-db-service:8000/load_data_file_from_s3"
+FAISS_API_SEARCH_ENDPOINT="http://vector-db-service:8000/search"
 
 
 IMAGES_DOWNLOAD_PATH_URL="https://amazon-berkeley-objects.s3.amazonaws.com/archives/abo-images-small.tar"

@@ -119,12 +119,17 @@ def add_vectors():
     else:
         return jsonify({"message": "Send a POST request to add vectors."})
 
-@app.route("/string-reverse", methods=["GET"])
-def string_reverse(text):    
+
+@app.route("/string-reverse", methods=["POST"])
+def string_reverse():
+    data = request.get_json()  # Extract text from request body
+    if not data or "text" not in data:
+        return jsonify({"error": "Missing 'text' in request body"}), 400    
+
+    text = data["text"]
     reversed_text = text[::-1]
     print(f'printing reversed text in vector-db-service: [{reversed_text}]')
-    return {"original": text, "reversed": reversed_text}
-    
+    return jsonify({"original": text, "reversed": reversed_text})
 
 @app.route("/search", methods=["GET", "POST"])
 def search_vectors():

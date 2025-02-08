@@ -9,6 +9,7 @@ from langchain_community.chat_models import ChatOpenAI
 
 import openai
 import os
+import requests
 
 # Gradio Interface
 with gr.Blocks() as app:
@@ -33,11 +34,35 @@ with gr.Blocks() as app:
 
 
 # Define the function that will process the input
-def reverse_text(text):
-    return text[::-1]
+# def reverse_text(text):
+#     return text[::-1]
+
+#VECTOR_DB_HOST = os.getenv("VECTOR_DB_HOST", "http://vector-db-service:8000/string-reverse")
+def reverse_text(input_text):       
+    #api_url = VECTOR_DB_HOST
+    api_url='http://vector-db-service:8000/string-reverse'
+    print(f'api_url: {api_url}')
+    payload = {"text": input_text}
+
+    try:
+        response = requests.post(api_url, json=payload)
+        response.raise_for_status()  # Raise an error for HTTP failures
+        result = response.json()  # Extract JSON response
+        return result['reversed']
+    except requests.exceptions.RequestException as e:
+        return f"Error contacting API: {str(e)}"
+
+
+
 
 # Create the Gradio interface
-iface = gr.Interface(fn=reverse_text, inputs="text", outputs="text")
+iface = gr.Interface(
+    fn=reverse_text, 
+    inputs="text", 
+    outputs="text",
+    title="String Reverser UI",
+    description="Enter a string to reverse it using vector-db-service API."
+)
 
 # Launch the interface
 iface.launch(server_name="0.0.0.0", server_port=7860)

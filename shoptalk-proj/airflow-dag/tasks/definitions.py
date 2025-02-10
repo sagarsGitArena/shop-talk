@@ -535,7 +535,8 @@ def generate_image_captions(local_dir, **kwargs):
     print(f'Processor :{processor}')
     print(f'Model :{model}')
      # Batch size
-    batch_size = 256  # Adjust according to your system's memory capacity
+    #Was 246 had to change to 128 becuase of OOM error. Try changing to 256 again.
+    batch_size = 128  # Adjust according to your system's memory capacity
    # print(f'SAMPLE PATH: {os.path.join(SMALL_IMAGE_HOME_PATH, merged_df.loc[5, "image_path"])}')
     
     # Move to Cuda device

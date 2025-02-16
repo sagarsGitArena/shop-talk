@@ -6,7 +6,7 @@ LOCAL_DATA_DIR="/app/data/"
 #### CHROMA
 LOCAL_CHROMA_DB_STORE="/app/vector_database/chroma_db"
 #### FAISS 
-FAISS_LOCAL_DB_STORE="/app/vector_database/faiss_db"
+FAISS_LOCAL_DB_STORE="shop-talk/shoptalk-proj/vector_database/faiss_db" 
 FAISS_METADATA_JSON_FILE="faiss_metadata.json"
 FAISS_INDEX_BIN_FILE="faiss_index.bin"
 

@@ -10,8 +10,6 @@ import logging
 from sentence_transformers import SentenceTransformer
 import requests
 
-
-
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 sys.path.append(os.path.join(os.path.dirname(__file__), 'utils'))
@@ -21,9 +19,8 @@ from utils.s3_utils import download_file_from_s3, delete_file_from_s3, upload_fi
 from config import BUCKET_NAME, S3_DATA_FILE_PATH, LOCAL_DATA_DIR
 from config import FAISS_LOCAL_DB_STORE, FAISS_METADATA_JSON_FILE, FAISS_INDEX_BIN_FILE, FAISS_METADATA_JSON_FILE_S3_OBJECT_KEY, FAISS_INDEX_FILE_S3_OBJECT_KEY
 
-
-
 app = Flask(__name__)
+
 
 # Initialize FAISS index to use GPU
 dimension = 128  # Example dimensionality
@@ -118,6 +115,44 @@ def add_vectors():
         return jsonify({"message": "Vectors added successfully!"})
     else:
         return jsonify({"message": "Send a POST request to add vectors."})
+
+@app.route('/search_v2', methods=["GET", "POST"])
+def search():
+    try:
+        # Get the user query from the request
+        data = request.get_json()
+        user_query = data.get("prompt", "")
+        print(f"user_query----------------- :{user_query}")
+
+        if not user_query:
+            return jsonify({"error": "Missing query prompt"}), 400
+
+        # Encode the user query to get its embedding
+        query_embedding = model.encode(user_query).astype('float32').reshape(1, -1)
+
+        # Number of top results to retrieve
+        k = 5
+
+        # Perform the search in the FAISS index
+        distances, indices = index.search(query_embedding, k)
+
+        # Retrieve the tmp_image_path for the top k results
+        top_k_tmp_image_paths = [
+            metadata.get(idx, {}).get("tmp_image_path", None)
+            for idx in indices[0]
+        ]
+
+        # Filter out None values
+        top_k_tmp_image_paths = [path for path in top_k_tmp_image_paths if path]
+        print(f"user_query----------------- :{user_query}")
+
+        return jsonify({
+            "query": user_query,
+            "tmp_image_paths": top_k_tmp_image_paths
+        }), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/string-reverse", methods=["POST"])
@@ -241,7 +276,8 @@ def search_vectors():
             "brand_value": row['brand_value'],
             "Price": row['Price'],
             "caption": row['caption'],
-            "concatenated_desc": row['concatenated_desc']
+            "concatenated_desc": row['concatenated_desc'],
+            "tmp_image_path":row['tmp_image_path']
         }
 
             # Map FAISS index to item_id
@@ -272,8 +308,24 @@ def search_vectors():
     # Retrieve the item_ids for the top k results
     top_k_item_ids = [faiss_to_item_id[idx] for idx in indices[0]]
 
+    # Retrieve the tmp_image_path for the top k results
+    top_k_tmp_image_paths = [
+        metadata.get(faiss_to_item_id[idx], {}).get("tmp_image_path", None)
+        for idx in indices[0]
+        if idx in faiss_to_item_id  # Ensure index exists in mapping
+    ]
+
+    # Filter out None values in case some results have no tmp_image_path
+    top_k_tmp_image_paths = [path for path in top_k_tmp_image_paths if path is not None]
     # Return the results as a JSON response
-    return jsonify({"query": user_query, "top_k_item_ids": top_k_item_ids}), 200
+    return jsonify({
+        "query": user_query,
+        "tmp_image_paths": top_k_tmp_image_paths  # ✅ Returns image paths instead of item IDs
+    }), 200
+
+
+    # Return the results as a JSON response
+    #return jsonify({"query": user_query, "top_k_item_ids": top_k_item_ids}), 200
 
 
 

@@ -17,7 +17,8 @@ print(f'faiss: app.py - PATH: {sys.path}')
 
 from utils.s3_utils import download_file_from_s3, delete_file_from_s3, upload_file_to_s3
 from config import BUCKET_NAME, S3_DATA_FILE_PATH, LOCAL_DATA_DIR
-from config import FAISS_LOCAL_DB_STORE, FAISS_METADATA_JSON_FILE, FAISS_INDEX_BIN_FILE, FAISS_METADATA_JSON_FILE_S3_OBJECT_KEY, FAISS_INDEX_FILE_S3_OBJECT_KEY
+from config import FAISS_LOCAL_DB_STORE, FAISS_METADATA_JSON_FILE, FAISS_INDEX_BIN_FILE, FAISS_METADATA_JSON_FILE_S3_OBJECT_KEY, FAISS_INDEX_FILE_S3_OBJECT_KEY, FAISS_INDEX_PATH, FAISS_METADATA_PATH
+    
 
 app = Flask(__name__)
 
@@ -165,6 +166,63 @@ def string_reverse():
     reversed_text = text[::-1]
     print(f'printing reversed text in vector-db-service: [{reversed_text}]')
     return jsonify({"original": text, "reversed": reversed_text})
+
+@app.route("/faiss-search", methods=["POST"])
+def faiss_search():
+    
+        # Load FAISS index
+    index = faiss.read_index(FAISS_INDEX_PATH)
+    
+    with open(FAISS_METADATA_PATH, "r") as f:
+        metadata = json.load(f)
+    
+    print("FAISS index and metadata loaded successfully!")
+    #print(f'metadata :{metadata}')
+    jsonify({"message": "In search added successfully!"})
+    # Your data to send in the request
+    data = request.get_json()
+
+    # Set the headers
+    headers = {'Content-Type': 'application/json'}
+    
+    user_query = data.get("prompt", "")
+    print(f'PROMPT: {user_query}')
+    
+    
+    model = SentenceTransformer('all-MiniLM-L6-v2')
+    query_embedding = model.encode(user_query).astype('float32').reshape(1, -1)
+    
+    top_k=3
+    # Perform search
+    distances, indices = index.search(query_embedding, top_k)
+    results = []
+    # Retrieve and print metadata based on item_id
+    for i, faiss_idx in enumerate(indices[0]):
+        if faiss_idx == -1:
+            continue  # Skip invalid indices if any
+
+        # Assuming item_id is the same as the FAISS index, otherwise map accordingly
+        print(f'i:{i}, faiss_idx:{faiss_idx}')
+        item_id = str(faiss_idx)  # Use faiss_idx or use a mapping if needed\
+        print(f'metadata[]')
+        
+        print(f"Rank {i+1}:")
+        print(f"Product Metadata: {metadata.get(item_id, 'Metadata not found')}")
+        print(f"Distance: {distances[0][i]}")
+        print(f"Concatenated Desc: {metadata.get(item_id, {}).get('concatenated_desc', 'N/A')}")
+        
+        # Append results in a dictionary format to be returned
+        results.append({
+            "rank": i+1,
+            "item_id": item_id,
+            "distance": distances[0][i],
+            "metadata": metadata.get(item_id, {}),
+            "concatenated_desc": metadata.get(item_id, {}).get('concatenated_desc', 'N/A')
+        })
+    
+    # Return the search results
+    return jsonify(results)
+    
 
 @app.route("/search", methods=["GET", "POST"])
 def search_vectors():

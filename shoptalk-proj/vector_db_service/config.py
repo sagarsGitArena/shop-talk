@@ -16,3 +16,7 @@ FAISS_INDEX_BIN_FILE="faiss_index.bin"
 ### S3 #######
 FAISS_INDEX_FILE_S3_OBJECT_KEY="vector-datastore/faiss/faiss_index.bin"
 FAISS_METADATA_JSON_FILE_S3_OBJECT_KEY="vector-datastore/faiss/faiss_metadata.json"
+
+
+FAISS_INDEX_PATH="/app/vector_database/faiss_db/faiss_index.bin"
+FAISS_METADATA_PATH="/app/vector_database/faiss_db/faiss_metadata.json"

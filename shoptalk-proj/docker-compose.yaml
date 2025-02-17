@@ -352,8 +352,8 @@ services:
     container_name: vector-db-service
     volumes:
       - ./data:/app/data
-      - ./vector_database/faiss_db:/app/vector_database/faiss_db
-      - ./vector_database/chroma_db:/app/vector_database/chroma_db
+      - ./vector_database:/app/vector_database
+      
   
   rag-ui-service:
     networks:
@@ -371,6 +371,8 @@ services:
     container_name: shoptalk-ui-service
     volumes:
       - ./data:/opt/airflow/data
+      - ./vector_database:/opt/vector_database
+      
 
 volumes:
   postgres-db-volume:

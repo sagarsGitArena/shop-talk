@@ -12,7 +12,8 @@ import openai
 import os
 import requests
 import logging
-from config import REVERSE_STRING_API_ENDPOINT
+from config import REVERSE_STRING_API_ENDPOINT, CREATE_INDEX_API_ENDPOINT, FAISS_VECTOR_DB_SEARCH_ENDPOINT
+                  
 
 
 
@@ -22,7 +23,35 @@ logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %
 import requests
 import logging
 
-CREATE_INDEX_API_ENDPOINT='http://vector-db-service:8000/create_index'
+
+def test(prompt):
+    FAISS_VECTOR_DB_SEARCH_ENDPOINT
+    response = requests.post(FAISS_VECTOR_DB_SEARCH_ENDPOINT)
+    if response.status_code == 200:
+        print("FAISS index created successfully.")
+        print("FAISS index created successfully.")
+    else:
+        print(f"Error creating FAISS index: {response.text}")
+        print(f"Error creating FAISS index: {response.text}")
+    
+    data = {"prompt": prompt}    
+    print(f"Sending POST request to {FAISS_VECTOR_DB_SEARCH_ENDPOINT} with data: {data}")
+    response = requests.post(FAISS_VECTOR_DB_SEARCH_ENDPOINT, json=data)
+    print(f"response----------------: {response.text}")
+    #response.raise_for_status()  # Raise an exception for HTTP errors
+    try:
+        response_data = response.json()  # Parse JSON response
+    except requests.exceptions.JSONDecodeError:
+        print("Error: Received invalid JSON response")
+        response_data = None
+
+    response_data = response.json()  # Parse JSON response
+    print(f"Received response-------------: {response_data}")
+    
+    
+
+    
+
 def create_index():
     """
     Call the /create_index API to generate embeddings and store the FAISS index.
@@ -42,7 +71,8 @@ def fetch_top_items(prompt):
     Fetch top items from the backend API based on the user's shopping request.
     Returns a list of item IDs.
     """
-    api_endpoint = REVERSE_STRING_API_ENDPOINT
+    #api_endpoint = REVERSE_STRING_API_ENDPOINT
+    api_endpoint = FAISS_VECTOR_DB_SEARCH_ENDPOINT
     data = {"prompt": prompt}
 
     logging.debug(f"Sending POST request to {api_endpoint} with data: {data}")
@@ -122,7 +152,7 @@ with gr.Blocks(css="styles.css") as app:
         llm_response_output = gr.Textbox(label="LLM Response", interactive=False)    
     submit_button = gr.Button("Search")
     submit_button.click(
-        shopping_agent,
+        test,
         inputs=[query_input],
         outputs=[product_details_output, llm_response_output]
     )

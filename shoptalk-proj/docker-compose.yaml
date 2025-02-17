@@ -370,8 +370,9 @@ services:
       - NVIDIA_VISIBLE_DEVICES=all
     container_name: shoptalk-ui-service
     volumes:
-      - ./data:/opt/airflow/data
+#      - ./data:/opt/airflow/data
       - ./vector_database:/opt/vector_database
+      - ./data/rawimages/images/small:/opt/images
       
 
 volumes:

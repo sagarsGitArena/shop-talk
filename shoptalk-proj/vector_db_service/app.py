@@ -237,7 +237,8 @@ def faiss_search():
         print("Product Metadata:", metadata[item_id])  # Fetch metadata using item_id
         print("Distance:", distances[0][i])
         print(f" Concatenated Desc : {metadata[item_id]['concatenated_desc']}")
-        print(f"Image Path: {metadata[item_id]['tmp_image_path']}")
+        print(f"Image Path: {metadata[item_id]['image_path']}")
+        #print(f"Image Abs Path: {metadata[item_id]['tmp_image_path']}")
         
         # Append results in a dictionary format to be returned
         results.append({
@@ -246,7 +247,7 @@ def faiss_search():
             "distance": float(distances[0][i]),
             "metadata": metadata.get(item_id, {}),
             "concatenated_desc": metadata.get(item_id, {}).get('concatenated_desc', 'N/A'),
-            "image_file_location": metadata.get(item_id, {}).get('tmp_image_path', 'N/A') # {metadata[item_id]['tmp_image_path']}
+            "image_file_location": metadata.get(item_id, {}).get('image_path', 'N/A') # {metadata[item_id]['tmp_image_path']}
         })
     
     print(jsonify(results))
@@ -365,6 +366,7 @@ def search_vectors():
             "Price": row['Price'],
             "caption": row['caption'],
             "concatenated_desc": row['concatenated_desc'],
+            "image_path":row['path'],
             "tmp_image_path":row['tmp_image_path']
         }
 
@@ -535,7 +537,9 @@ def embed_description_and_load_vectors():
             "Price": row['Price'],
             "caption": row['caption'],
             "concatenated_desc": row['concatenated_desc'],
+            "image_path":row['path'],
             "tmp_image_path":row['tmp_image_path']
+            
         }
 
             # Map FAISS index to item_id

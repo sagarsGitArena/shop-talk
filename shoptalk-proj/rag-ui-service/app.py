@@ -24,15 +24,13 @@ import requests
 import logging
 
 
-def test(prompt):
+def fetch_top_items2(prompt):
     FAISS_VECTOR_DB_SEARCH_ENDPOINT
     response = requests.post(FAISS_VECTOR_DB_SEARCH_ENDPOINT)
     if response.status_code == 200:
-        print("FAISS index created successfully.")
-        print("FAISS index created successfully.")
+        print("FAISS index created successfully.")        
     else:
-        print(f"Error creating FAISS index: {response.text}")
-        print(f"Error creating FAISS index: {response.text}")
+        print(f"Error creating FAISS index: {response.text}")        
     
     data = {"prompt": prompt}    
     print(f"Sending POST request to {FAISS_VECTOR_DB_SEARCH_ENDPOINT} with data: {data}")

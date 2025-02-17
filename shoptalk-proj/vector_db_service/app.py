@@ -17,7 +17,7 @@ print(f'faiss: app.py - PATH: {sys.path}')
 
 from utils.s3_utils import download_file_from_s3, delete_file_from_s3, upload_file_to_s3
 from config import BUCKET_NAME, S3_DATA_FILE_PATH, LOCAL_DATA_DIR
-from config import FAISS_LOCAL_DB_STORE, FAISS_METADATA_JSON_FILE, FAISS_INDEX_BIN_FILE, FAISS_METADATA_JSON_FILE_S3_OBJECT_KEY, FAISS_INDEX_FILE_S3_OBJECT_KEY, FAISS_INDEX_PATH, FAISS_METADATA_PATH
+from config import FAISS_LOCAL_DB_STORE, FAISS_METADATA_JSON_FILE, FAISS_INDEX_BIN_FILE, FAISS_METADATA_JSON_FILE_S3_OBJECT_KEY, FAISS_INDEX_FILE_S3_OBJECT_KEY, FAISS_INDEX_PATH, FAISS_METADATA_PATH, FAISS_INDEX_TO_ITEM_ID_JSON_FILE, FAISS_INDEX_TO_ITEM_ID_JSON_FILE_PATH
     
 
 app = Flask(__name__)
@@ -176,10 +176,31 @@ def faiss_search():
     with open(FAISS_METADATA_PATH, "r") as f:
         metadata = json.load(f)
     
+    with open(FAISS_INDEX_TO_ITEM_ID_JSON_FILE_PATH, "r") as f:
+        faiss_idx_to_item_id_map = json.load(f)
+    
     print("FAISS index and metadata loaded successfully!")
     #print(f'metadata :{metadata}')
     jsonify({"message": "In search added successfully!"})
+    
+    for key, value in list(faiss_idx_to_item_id_map.items())[:5]:
+            print(f"Key: {key}, Value: {value}")
+            
     # Your data to send in the request
+    ########### EXLORING metadat ##
+    # Print first 5 key-value pairs
+    print(f'Length : {len(metadata)}')
+    if isinstance(metadata, dict):
+        print("Metadata is a dictionary. First 5 key-value pairs:")
+        for key, value in list(metadata.items())[:5]:
+            print(f"Key: {key}, Value: {value}")
+    elif isinstance(metadata, list):
+        print("Metadata is a list. First 5 elements:")
+        print(metadata[:5])
+    else:
+        print("Unexpected metadata format.")
+
+
     data = request.get_json()
 
     # Set the headers
@@ -203,23 +224,32 @@ def faiss_search():
 
         # Assuming item_id is the same as the FAISS index, otherwise map accordingly
         print(f'i:{i}, faiss_idx:{faiss_idx}')
-        item_id = str(faiss_idx)  # Use faiss_idx or use a mapping if needed\
-        print(f'metadata[]')
-        
+##        item_id = faiss_idx_to_item_id_map[faiss_idx]  
+        # Map FAISS index to item_id
+        item_id = faiss_idx_to_item_id_map.get(str(faiss_idx), None)
+        if item_id is None:
+            print(f"FAISS index {faiss_idx} not found in the mapping!")
+        else:
+            print(f"FAISS index {faiss_idx} maps to item_id {item_id}")
+
+        print(item_id)
         print(f"Rank {i+1}:")
-        print(f"Product Metadata: {metadata.get(item_id, 'Metadata not found')}")
-        print(f"Distance: {distances[0][i]}")
-        print(f"Concatenated Desc: {metadata.get(item_id, {}).get('concatenated_desc', 'N/A')}")
+        print("Product Metadata:", metadata[item_id])  # Fetch metadata using item_id
+        print("Distance:", distances[0][i])
+        print(f" Concatenated Desc : {metadata[item_id]['concatenated_desc']}")
+        print(f"Image Path: {metadata[item_id]['tmp_image_path']}")
         
         # Append results in a dictionary format to be returned
         results.append({
             "rank": i+1,
             "item_id": item_id,
-            "distance": distances[0][i],
+            "distance": float(distances[0][i]),
             "metadata": metadata.get(item_id, {}),
-            "concatenated_desc": metadata.get(item_id, {}).get('concatenated_desc', 'N/A')
+            "concatenated_desc": metadata.get(item_id, {}).get('concatenated_desc', 'N/A'),
+            "image_file_location": metadata.get(item_id, {}).get('tmp_image_path', 'N/A') # {metadata[item_id]['tmp_image_path']}
         })
     
+    print(jsonify(results))
     # Return the search results
     return jsonify(results)
     
@@ -284,7 +314,7 @@ def search_vectors():
     index.train(embeddings_array)
     
     # Dictionary to map FAISS index to item_id
-    faiss_to_item_id = {}
+    faiss_index_to_item_id_map = {}
 
      # Populate FAISS and store metadata by item_id
     metadata = {}
@@ -339,7 +369,7 @@ def search_vectors():
         }
 
             # Map FAISS index to item_id
-        faiss_to_item_id[index.ntotal - 1] = item_id  # Current FAISS index
+        faiss_index_to_item_id_map[index.ntotal - 1] = item_id  # Current FAISS index
     
            
     jsonify({"status": "success", "message": "Embeddings processed and loaded to FAISS!"}), 200
@@ -356,7 +386,7 @@ def search_vectors():
     # Retrieve the metadata for the top k results
     #top_k_results = []
     #for idx in indices[0]:
-    #    item_id = faiss_to_item_id[idx]
+    #    item_id = faiss_index_to_item_id_map[idx]
     #    item_metadata = metadata.get(item_id, {})
     #   top_k_results.append(item_metadata)
 
@@ -364,13 +394,13 @@ def search_vectors():
     #return jsonify({"query": user_query, "results": top_k_results}), 200
 
     # Retrieve the item_ids for the top k results
-    top_k_item_ids = [faiss_to_item_id[idx] for idx in indices[0]]
+    top_k_item_ids = [faiss_index_to_item_id_map[idx] for idx in indices[0]]
 
     # Retrieve the tmp_image_path for the top k results
     top_k_tmp_image_paths = [
-        metadata.get(faiss_to_item_id[idx], {}).get("tmp_image_path", None)
+        metadata.get(faiss_index_to_item_id_map[idx], {}).get("tmp_image_path", None)
         for idx in indices[0]
-        if idx in faiss_to_item_id  # Ensure index exists in mapping
+        if idx in faiss_index_to_item_id_map  # Ensure index exists in mapping
     ]
 
     # Filter out None values in case some results have no tmp_image_path
@@ -423,7 +453,7 @@ def embed_description_and_load_vectors():
         delete_file_from_s3(aws_access_key, aws_secret_key, s3_bucket_name, s3_object_key)
     # file_obj = s3_client.get_object(Bucket=bucket_name, Key=file_key)
     products_captioned_df = pd.read_csv(os.path.join(local_directory, file_name))
-    logging.info('==================d==================')
+    logging.info('=====================================')
     logging.info(products_captioned_df.info())
     logging.info('====================================')
 
@@ -454,7 +484,7 @@ def embed_description_and_load_vectors():
     index.train(embeddings_array)
     
     # Dictionary to map FAISS index to item_id
-    faiss_to_item_id = {}
+    faiss_index_to_item_id_map = {}
 
     # Populate FAISS and store metadata by item_id
     metadata = {}
@@ -504,11 +534,12 @@ def embed_description_and_load_vectors():
             "brand_value": row['brand_value'],
             "Price": row['Price'],
             "caption": row['caption'],
-            "concatenated_desc": row['concatenated_desc']
+            "concatenated_desc": row['concatenated_desc'],
+            "tmp_image_path":row['tmp_image_path']
         }
 
             # Map FAISS index to item_id
-        faiss_to_item_id[index.ntotal - 1] = item_id  # Current FAISS index
+        faiss_index_to_item_id_map[index.ntotal - 1] = item_id  # Current FAISS index
     
     # Save FAISS index locally
     local_index_bin_file_path=  FAISS_LOCAL_DB_STORE + '/' + FAISS_INDEX_BIN_FILE
@@ -518,6 +549,11 @@ def embed_description_and_load_vectors():
     local_json_metadata_file_path = FAISS_LOCAL_DB_STORE + '/' + FAISS_METADATA_JSON_FILE
     with open(local_json_metadata_file_path, 'w') as f:
         json.dump(metadata, f)
+    
+    #Save faiss_index_to_item_id_map locally
+    local_json_metadata_file_path = FAISS_LOCAL_DB_STORE + '/' + FAISS_INDEX_TO_ITEM_ID_JSON_FILE
+    with open(local_json_metadata_file_path, 'w') as f:
+        json.dump(faiss_index_to_item_id_map, f)
     
     upload_file_to_s3(aws_access_key, aws_secret_key, s3_bucket_name, FAISS_INDEX_FILE_S3_OBJECT_KEY, local_index_bin_file_path)
     upload_file_to_s3(aws_access_key, aws_secret_key, s3_bucket_name, FAISS_METADATA_JSON_FILE_S3_OBJECT_KEY, local_json_metadata_file_path)

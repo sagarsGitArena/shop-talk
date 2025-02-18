@@ -150,7 +150,7 @@ with gr.Blocks(css="styles.css") as app:
         llm_response_output = gr.Textbox(label="LLM Response", interactive=False)    
     submit_button = gr.Button("Search")
     submit_button.click(
-        test,
+        fetch_top_items2,
         inputs=[query_input],
         outputs=[product_details_output, llm_response_output]
     )

@@ -41,7 +41,7 @@ with DAG(
     start_date=datetime(2024, 1, 1),
     #schedule_interval="@daily",
     #schedule_interval="*/10 * * * *",  # Every 10 minutes
-    schedule_interval=timedelta(minutes=1000),  # Every 10 minutes
+    schedule_interval=None,
     max_active_runs=3,
     catchup=False,
 ) as dag:
@@ -265,5 +265,5 @@ with DAG(
 #[download_task >> extract_task >> flatten_all_json_and_save_as_csv , download_images_task >> extract_images_task >> flatten_images_metadata_task] >> merge_listings_image_df_task
 
 ## If we are copying the tar file from local dir for minimal dataset
-#[copy_listings_task >> extract_task >> flatten_all_json_and_save_US_data_as_csv >> load_us_data_and_perform_eda >> perform_eda_on_us_listings_data,  copy_images_to_local_folder_from_s3 >> copy_to_rawimage_folder >> extract_images_task >> flatten_images_metadata_task] >> merge_listings_image_df_task >> merged_data_clean_up_task >> generate_image_captions_task >> upload_captions_to_s3_task >> check_if_data_file_arrived_task >> load_faiss_vector_db_task
-[check_if_data_file_arrived_task >> load_faiss_vector_db_task]
+[copy_listings_task >> extract_task >> flatten_all_json_and_save_US_data_as_csv >> load_us_data_and_perform_eda >> perform_eda_on_us_listings_data,  copy_images_to_local_folder_from_s3 >> copy_to_rawimage_folder >> extract_images_task >> flatten_images_metadata_task] >> merge_listings_image_df_task >> merged_data_clean_up_task >> generate_image_captions_task >> upload_captions_to_s3_task >> check_if_data_file_arrived_task >> load_faiss_vector_db_task
+#[check_if_data_file_arrived_task >> load_faiss_vector_db_task]

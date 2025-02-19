@@ -22,6 +22,7 @@ RUN pip install --no-cache-dir -U \
                 torch \
                 langchain \                
                 langchain-community \
+                langchain-openai \
                 openai \
                 gradio \
                 pillow

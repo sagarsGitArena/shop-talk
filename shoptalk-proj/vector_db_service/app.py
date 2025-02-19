@@ -244,10 +244,12 @@ def faiss_search():
         results.append({
             "rank": i+1,
             "item_id": item_id,
-            "distance": float(distances[0][i]),
-            "metadata": metadata.get(item_id, {}),
+            #"distance": float(distances[0][i]),
+            #"metadata": metadata.get(item_id, {}),
             "concatenated_desc": metadata.get(item_id, {}).get('concatenated_desc', 'N/A'),
-            "image_file_location": metadata.get(item_id, {}).get('image_path', 'N/A') # {metadata[item_id]['tmp_image_path']}
+            "image_file_location": metadata.get(item_id, {}).get('image_path', 'N/A'), # {metadata[item_id]['tmp_image_path']}
+            "price": metadata.get(item_id, {}).get('Price', 'N/A'),
+            "color_value": metadata.get(item_id, {}).get('color_value', 'N/A')
         })
     
     print(jsonify(results))

@@ -6,13 +6,49 @@ from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 from langchain_community.llms import OpenAI
 #from langchain_community.llms import OpenAI
-from langchain_community.chat_models import ChatOpenAI
+#from langchain_community.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
+from langchain.prompts import ChatPromptTemplate, HumanMessagePromptTemplate
 
 import openai
 import os
 import requests
 import logging
 from config import REVERSE_STRING_API_ENDPOINT, CREATE_INDEX_API_ENDPOINT, FAISS_VECTOR_DB_SEARCH_ENDPOINT
+##############################
+#openai.api_key = os.getenv("OPENAI_API_KEY")
+
+# Create the PromptTemplate
+prompt_template=ChatPromptTemplate.from_messages([
+    HumanMessagePromptTemplate.from_template("""
+    You are a virtual shopping assistant. Based on the customer’s query, recommend three relevant products from the provided list.
+    Return a JSON object in the format:
+    {{
+      "products": [
+        {{
+          "product_name": "Product Name",
+          "rephrased_description": "Engaging rephrased description.",
+          "price": "Price",
+          "image_id": "Image ID"
+        }},
+        ...
+      ],
+      "sales_pitch": "A short and engaging sales pitch to encourage purchase, personalized to the customer’s interests and customer's query."
+    }}
+
+    Product List: {product_list}
+    Customer Query: "{customer_query}"
+    """)
+])
+
+llm=ChatOpenAI(model="gpt-3.5-turbo")
+
+# Create an LLMChain
+shopping_chain=LLMChain(
+    llm=llm,
+    prompt=prompt_template
+)
+########
                   
 
 
@@ -25,7 +61,6 @@ import logging
 
 
 def fetch_top_items2(prompt):
-    FAISS_VECTOR_DB_SEARCH_ENDPOINT
     response = requests.post(FAISS_VECTOR_DB_SEARCH_ENDPOINT)
     if response.status_code == 200:
         print("FAISS index created successfully.")        
@@ -45,8 +80,12 @@ def fetch_top_items2(prompt):
 
     response_data = response.json()  # Parse JSON response
     print(f"Received response-------------: {response_data}")
+    return response_data
     
-    
+ 
+def format_product_details(details):
+    formatted_details = "\n".join([f"- **{key}**: {value}" for key, value in details.items()])
+    return formatted_details   
 
     
 
@@ -153,6 +192,81 @@ with gr.Blocks(css="styles.css") as app:
         fetch_top_items2,
         inputs=[query_input],
         outputs=[product_details_output, llm_response_output]
+    )
+
+
+################ SAAGAR ########
+# Define the function for Gradio
+def handle_query(query):
+    # Dummy response for demonstration
+    sales_pitch = f"Our top recommendations for: {query}!"
+    print("==============================================================")
+    #response_data = response.json()  # Parse JSON response
+    api_response = fetch_top_items2(query)
+    print("==============================================================")
+    print(f'handle_query.api_response : {api_response}')
+        
+        
+    base_image_path="/app/images/"
+        
+    product_data = [
+        {
+            "image": f"{base_image_path}{item['image_file_location']}",
+            "details": {
+                "Description": item['concatenated_desc'].split("nan")[0].strip(),  # Remove 'nan' from description
+                "Price": f"${item['price']:.2f}",
+                "Color": item['color_value'] if isinstance(item['color_value'], str)  else "Unknown" 
+            }
+        }
+        for item in api_response
+    ]   
+        
+    
+    return sales_pitch, product_data
+
+
+# Define the Gradio interface
+# Gradio Interface
+with gr.Blocks() as app:
+    gr.Markdown("## ShopTalk - Your Personal Shopping Assistant")
+
+    # Input for query
+    query_input = gr.Textbox(label="Enter your shopping query")
+
+    # Output for sales pitch
+    sales_pitch_output = gr.Textbox(label="Sales Pitch", lines=4)
+
+    # Horizontal row for product recommendations
+    with gr.Row():
+        product_outputs = []
+        for i in range(3):  # Assuming 3 products
+            with gr.Column():
+                # Set fixed width and height for images
+                product_image = gr.Image(label=f"Product {i+1} Image", height=450, width=450)  # Resize to 150x150
+                product_details = gr.Markdown(label=f"Product {i+1} Details")
+                product_outputs.append((product_image, product_details))
+
+    # Button to trigger search
+    submit_button = gr.Button("Search")
+
+    # Define the function call for Gradio
+    def update_ui(query):
+        sales_pitch, product_data = handle_query(query)        
+        outputs = [sales_pitch]
+
+        # Update the product outputs
+        for i in range(3):
+            product = product_data[i]
+            formatted_details = format_product_details(product["details"])
+            outputs.extend([product["image"], formatted_details])
+
+        return outputs
+
+    # Connect input, outputs, and logic
+    submit_button.click(
+        update_ui,
+        inputs=[query_input],
+        outputs=[sales_pitch_output] + [output for pair in product_outputs for output in pair]
     )
 
 # Launch the Gradio app

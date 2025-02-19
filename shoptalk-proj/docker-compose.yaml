@@ -367,12 +367,13 @@ services:
       - vector-db-service
     environment:
       - VECTOR_DB_HOST=http://vector-db-service:8000
-      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_VISIBLE_DEVICES=all     
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
     container_name: shoptalk-ui-service
     volumes:
 #      - ./data:/opt/airflow/data
       - ./vector_database:/opt/vector_database
-      - ./data/rawimages/images/small:/opt/images
+      - ./data/rawimages/images/small:/app/images
       
 
 volumes:

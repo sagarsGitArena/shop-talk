@@ -26,7 +26,8 @@ RUN pip install --no-cache-dir \
                 faiss-gpu \
                 flask \
                 "cupy-cuda12x" \
-                boto3
+                boto3 \
+                mlflow
 
 
 # Copy application files

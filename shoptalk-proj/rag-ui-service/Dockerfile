@@ -25,7 +25,8 @@ RUN pip install --no-cache-dir -U \
                 langchain-openai \
                 openai \
                 gradio \
-                pillow
+                pillow \
+                mlflow
 #                streamlit 
 
 

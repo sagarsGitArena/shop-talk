@@ -51,4 +51,4 @@ id -nG
 
 #printf "\e[32m$(figlet -w 100 -f slant 'Install docker-compose')\e[0m"
 figlet_print_green 'Install docker-compose'
-sudo apt install docker-compose
+echo "Y" | sudo apt install docker-compose

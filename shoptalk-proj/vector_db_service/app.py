@@ -9,6 +9,9 @@ import json
 import logging
 from sentence_transformers import SentenceTransformer
 import requests
+import mlflow
+
+
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 

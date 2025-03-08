@@ -1,4 +1,4 @@
-BUCKET_NAME="sagar-poc-bucket"
+BUCKET_NAME="shoptalk-g1-bucket"
 S3_DATA_FILE_PATH="products-listings/US_DF_with_price_and_caption.csv"
 
 

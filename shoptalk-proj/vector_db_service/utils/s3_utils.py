@@ -4,7 +4,7 @@ import os
 from botocore.exceptions import NoCredentialsError
 
 # logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-def download_file_from_s3(aws_access_key, aws_secret_key, bucket_name, s3_object_key, local_directory):
+def download_file_from_s3(bucket_name, s3_object_key, local_directory):
     """
     Downloads a file from an S3 bucket to a local directory.
 
@@ -29,10 +29,12 @@ def download_file_from_s3(aws_access_key, aws_secret_key, bucket_name, s3_object
     local_file_path = os.path.join(local_directory, file_name)
 
     # Create an S3 client
-    s3 = boto3.client('s3',
-                        aws_access_key_id=aws_access_key,
-                        aws_secret_access_key=aws_secret_key)
+    # s3 = boto3.client('s3',                      
+    #                     aws_access_key_id=aws_access_key,
+    #                     aws_secret_access_key=aws_secret_key)
 
+    s3 = boto3.client('s3')
+                        
     print(f"Downloading '{s3_object_key}' from bucket '{bucket_name}' to '{local_file_path}'...")
 
     # Download the file
@@ -46,7 +48,7 @@ def download_file_from_s3(aws_access_key, aws_secret_key, bucket_name, s3_object
     return False
 
 
-def delete_file_from_s3(aws_access_key, aws_secret_key, bucket_name, s3_object_key):
+def delete_file_from_s3(bucket_name, s3_object_key):
     """
     Downloads a file from an S3 bucket to a local directory and deletes the object from the S3 bucket.
 
@@ -60,9 +62,10 @@ def delete_file_from_s3(aws_access_key, aws_secret_key, bucket_name, s3_object_k
     """
 
     # Create an S3 client
-    s3 = boto3.client('s3',
-                      aws_access_key_id=aws_access_key,
-                      aws_secret_access_key=aws_secret_key)
+    # s3 = boto3.client('s3',
+    #                   aws_access_key_id=aws_access_key,
+    #                   aws_secret_access_key=aws_secret_key)
+    s3 = boto3.client('s3')  
 
     try:
     
@@ -77,9 +80,10 @@ def delete_file_from_s3(aws_access_key, aws_secret_key, bucket_name, s3_object_k
     return False
 
 
-def upload_file_to_s3(access_key, secret_key, bucket_name, file_name, local_file_path):
+def upload_file_to_s3(bucket_name, file_name, local_file_path):
     # Create an S3 client using the provided credentials
-    s3 = boto3.client('s3', aws_access_key_id=access_key, aws_secret_access_key=secret_key)
+    #s3 = boto3.client('s3', aws_access_key_id=access_key, aws_secret_access_key=secret_key)
+    s3 = boto3.client('s3')
 
     try:
         # Upload the local file to the specified S3 bucket with the given filename

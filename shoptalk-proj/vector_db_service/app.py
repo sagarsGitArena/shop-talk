@@ -563,8 +563,8 @@ def embed_description_and_load_vectors():
     with open(local_json_metadata_file_path, 'w') as f:
         json.dump(faiss_index_to_item_id_map, f)
     
-    upload_file_to_s3(aws_access_key, aws_secret_key, s3_bucket_name, FAISS_INDEX_FILE_S3_OBJECT_KEY, local_index_bin_file_path)
-    upload_file_to_s3(aws_access_key, aws_secret_key, s3_bucket_name, FAISS_METADATA_JSON_FILE_S3_OBJECT_KEY, local_json_metadata_file_path)
+    upload_file_to_s3(s3_bucket_name, FAISS_INDEX_FILE_S3_OBJECT_KEY, local_index_bin_file_path)
+    upload_file_to_s3(s3_bucket_name, FAISS_METADATA_JSON_FILE_S3_OBJECT_KEY, local_json_metadata_file_path)
     
     return jsonify({"status": "success", "message": "Embeddings processed and loaded to FAISS!"}), 200
 

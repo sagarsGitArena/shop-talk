@@ -481,7 +481,7 @@ def up_load_us_listings_to_s3():
     
     local_file_path2 = LISTINGS_CSV_FILE_LOCATION + 'us_listings.csv'
     print(f'local_file_path2: {os.path.exists(local_file_path2)}')
-    upload_file_to_s3(aws_access_key_id, aws_secret_access_key, AWS_S3_BUCKET, "listings/us_listings.csv", local_file_path2 )
+    upload_file_to_s3( AWS_S3_BUCKET, "listings/us_listings.csv", local_file_path2 )
 
     
 

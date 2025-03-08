@@ -6,7 +6,8 @@ import boto3
 from botocore.exceptions import NoCredentialsError
 
 
-def upload_file_to_s3(access_key, secret_key, bucket_name, file_name, local_file_path):
+#def upload_file_to_s3(access_key, secret_key, bucket_name, file_name, local_file_path):
+def upload_file_to_s3(file_name, local_file_path):    
     # Create an S3 client using the provided credentials
     #s3 = boto3.client('s3', aws_access_key_id=access_key, aws_secret_access_key=secret_key)
     s3 = boto3.client('s3') 
@@ -22,8 +23,9 @@ def upload_file_to_s3(access_key, secret_key, bucket_name, file_name, local_file
         
 
 
-def download_file_from_s3(access_key, secret_key, bucket_name, file_name, local_file_path):
-    print(f'AWS_ACCESS_KEY:{access_key}, AWS_SECRET_KEY:{secret_key}')
+#def download_file_from_s3(access_key, secret_key, bucket_name, file_name, local_file_path):
+def download_file_from_s3( bucket_name, file_name, local_file_path):
+    #print(f'AWS_ACCESS_KEY:{access_key}, AWS_SECRET_KEY:{secret_key}')
     #s3 = boto3.client('s3', aws_access_key_id=access_key, aws_secret_access_key=secret_key)
     s3 = boto3.client('s3')
 
@@ -35,7 +37,8 @@ def download_file_from_s3(access_key, secret_key, bucket_name, file_name, local_
     except NoCredentialsError:
         print("Credentials not available or incorrect")        
 
-def copy_file_between_buckets(access_key, secret_key, source_bucket, destination_bucket, file_name):
+#def copy_file_between_buckets(access_key, secret_key, source_bucket, destination_bucket, file_name):
+def copy_file_between_buckets(source_bucket, destination_bucket, file_name):
     # Create an S3 client using the provided credentials
     #s3 = boto3.client('s3', aws_access_key_id=access_key, aws_secret_access_key=secret_key)
     s3 = boto3.client('s3')

@@ -432,8 +432,8 @@ def embed_description_and_load_vectors():
     
     data = request.json
     s3_bucket_name = data['s3_bucket_name']
-    aws_access_key = data['aws_access_key']
-    aws_secret_key = data['aws_secret_key']
+#    aws_access_key = data['aws_access_key']
+#    aws_secret_key = data['aws_secret_key']
     s3_object_key = data['s3_object_key']
 
     # Extract file name
@@ -442,22 +442,21 @@ def embed_description_and_load_vectors():
 
 
     print(f"File name: {file_name}")
-    print(f'bucket name:{s3_bucket_name}, aws_access_key:{aws_access_key}, aws_secret_key:{aws_secret_key}, fine_name:{file_name}')
+    #print(f'bucket name:{s3_bucket_name}, aws_access_key:{aws_access_key}, aws_secret_key:{aws_secret_key}, fine_name:{file_name}')
+    print(f'bucket name:{s3_bucket_name}, fine_name:{file_name}')
     # Log the masked information
     logging.info(
         f'bucket name: {s3_bucket_name}, '
-        f'aws_access_key: {aws_access_key}, '
-        f'aws_secret_key: {aws_secret_key}, '
         f'file_name: {file_name}',
         f's3_object_key: {s3_object_key}'
     )
 
     # Download the CSV from S3
 
-    downloaded = download_file_from_s3(aws_access_key, aws_secret_key, s3_bucket_name, s3_object_key, local_directory)
+    downloaded = download_file_from_s3(s3_bucket_name, s3_object_key, local_directory)
 
     if (downloaded):
-        delete_file_from_s3(aws_access_key, aws_secret_key, s3_bucket_name, s3_object_key)
+        delete_file_from_s3(s3_bucket_name, s3_object_key)
     # file_obj = s3_client.get_object(Bucket=bucket_name, Key=file_key)
     products_captioned_df = pd.read_csv(os.path.join(local_directory, file_name))
     logging.info('=====================================')

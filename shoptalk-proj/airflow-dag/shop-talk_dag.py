@@ -76,8 +76,8 @@ with DAG(
         python_callable=download_file_from_s3,
         task_concurrency=2,
         op_kwargs={
-                    "access_key": os.environ["AWS_ACCESS_KEY_ID"],
-                    "secret_key": os.environ["AWS_SECRET_ACCESS_KEY"],
+#                    "access_key": os.environ["AWS_ACCESS_KEY_ID"],
+#                    "secret_key": os.environ["AWS_SECRET_ACCESS_KEY"],
                     "bucket_name": AWS_S3_BUCKET,
                     "file_name" : LISTINGS_OBJECT_S3_KEY_ID,
                     "local_file_path": TMP_LISTINGS_DOWNLOAD_LOCATION
@@ -159,8 +159,8 @@ with DAG(
         python_callable=download_file_from_s3,
         task_concurrency=2,
         op_kwargs={
-                    "access_key": os.environ["AWS_ACCESS_KEY_ID"],
-                    "secret_key": os.environ["AWS_SECRET_ACCESS_KEY"],
+#                    "access_key": os.environ["AWS_ACCESS_KEY_ID"],
+#                    "secret_key": os.environ["AWS_SECRET_ACCESS_KEY"],
                     "bucket_name": AWS_S3_BUCKET,
                     "file_name" : IMAGES_OBJECT_S3_KEY_ID,
                     "local_file_path": TMP_IMAGE_DOWNLOAD_LOCATION
@@ -237,8 +237,8 @@ with DAG(
     upload_captions_to_s3_task = PythonOperator(
         task_id="upload_captions_to_s3_task",
         op_kwargs= {
-                    "access_key": os.environ["AWS_ACCESS_KEY_ID"],
-                    "secret_key": os.environ["AWS_SECRET_ACCESS_KEY"],
+#                    "access_key": os.environ["AWS_ACCESS_KEY_ID"],
+#                    "secret_key": os.environ["AWS_SECRET_ACCESS_KEY"],
                     "bucket_name": AWS_S3_BUCKET,
                     "local_dir": "listings/metadata/"},
         python_callable=upload_captions_to_s3,        
@@ -265,8 +265,8 @@ with DAG(
         endpoint=FAISS_API_ENDPOINT,
         data=json.dumps({
             's3_bucket_name': AWS_S3_BUCKET,
-            'aws_access_key': os.environ["AWS_ACCESS_KEY_ID"],
-            'aws_secret_key': os.environ["AWS_SECRET_ACCESS_KEY"],
+#            'aws_access_key': os.environ["AWS_ACCESS_KEY_ID"],
+#            'aws_secret_key': os.environ["AWS_SECRET_ACCESS_KEY"],
             's3_object_key': S3_CAPTIONED_OBJECT_KEY
         }),
         headers={"Content-Type": "application/json"},

@@ -207,7 +207,8 @@ def handle_query(query):
     print(f'handle_query.api_response : {api_response}')
         
         
-    base_image_path="/app/images/"
+    ##base_image_path="/app/images/"
+    base_image_path="/app/rawimages/images/small/"
         
     product_data = [
         {

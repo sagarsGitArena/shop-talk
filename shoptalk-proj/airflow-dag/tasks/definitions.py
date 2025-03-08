@@ -611,7 +611,7 @@ def generate_image_captions(local_dir, **kwargs):
     kwargs['ti'].xcom_push(key='all_US_listings_images_captioned_v1_csv_file', value=all_US_listings_images_captioned_v1_csv_file)
     return all_US_listings_images_captioned_v1_csv_file
 
-def upload_captions_to_s3(access_key, secret_key, bucket_name, local_dir, **kwargs):
+def upload_captions_to_s3(bucket_name, local_dir, **kwargs):
      
      ti = kwargs['ti']
 
@@ -622,7 +622,7 @@ def upload_captions_to_s3(access_key, secret_key, bucket_name, local_dir, **kwar
      #file_path = os.path.join(CAPTIONED_CSV_FILE_S3_LOCATION, all_US_listings_images_captioned_v1_csv_file)
      s3_object_key = f"{CAPTIONED_CSV_FILE_S3_LOCATION}{US_ONLY_LISTINGS_IMAGES_MERGED_CAPTIONED_CSV}"
      print(f"path:{all_US_listings_images_captioned_v1_csv_file}")
-     upload_file_to_s3(access_key, secret_key, bucket_name, s3_object_key, all_US_listings_images_captioned_v1_csv_file)
+     upload_file_to_s3(bucket_name, s3_object_key, all_US_listings_images_captioned_v1_csv_file)
 
     
     

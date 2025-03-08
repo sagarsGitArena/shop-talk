@@ -33,6 +33,9 @@ from config import LISTINGS_DOWNLOAD_PATH_URL, LOCAL_RAW_DATA_DIR, ALL_LISTINGS_
 
 #from s3_download import download_file_from_s3
 def download_tar_file(**kwargs):
+    print(f"User ID (UID): {os.getuid()}")  # Get the user ID
+    print(f"Group ID (GID): {os.getgid()}")  # Get the group ID
+        
     """Download the tar file from a URL."""
     local_tar_path = os.path.join(LOCAL_RAW_DATA_DIR,"abo-listings.tar")
     
@@ -58,9 +61,17 @@ def download_tar_file(**kwargs):
 
 
 
+
 def copy_listings_tar_file(source_path, destination_path, tar_file_name):
     
+###    "source_path": TMP_LISTINGS_SOURCE,==> /opt/airflow/downloads
+###    "destination_path": LOCAL_RAW_DATA_DIR, ==> /opt/airflow/data/raw
+###    "tar_file_name" : TAR_FILE_NAME  ==> abo-listings.tar
+    print(f"User ID (UID): {os.getuid()}")  # Get the user ID
+    print(f"Group ID (GID): {os.getgid()}")  # Get the group ID
+    
     source = os.path.join(source_path, tar_file_name)
+    #######source ===> /opt/airflow/downloads/abo-listings.tar
     # Ensure the source file exists
     if not os.path.isfile(source):
         print(f"Source file does not exist: {source_path}")
@@ -77,6 +88,8 @@ def copy_listings_tar_file(source_path, destination_path, tar_file_name):
         print(f"Error while copying file: {e}")
 
 def extract_tar_file(extract_dir_path, tar_file, local_extracted_json_dir, extracted_file_pattern, decompressed_json_file_pattern):        
+    print(f"User ID (UID): {os.getuid()}")  # Get the user ID
+    print(f"Group ID (GID): {os.getgid()}")  # Get the group ID    
     
     local_tar_path = os.path.join(extract_dir_path, tar_file)
     compressed_json_dir = os.path.join(extract_dir_path, local_extracted_json_dir)
@@ -152,6 +165,9 @@ def extract_tar_file(extract_dir_path, tar_file, local_extracted_json_dir, extra
     print(f'Files at {compressed_json_dir} : {files}')       
 
 def flatten_each_json_and_save_as_csv(local_extracted_json_dir):
+    print(f"User ID (UID): {os.getuid()}")  # Get the user ID
+    print(f"Group ID (GID): {os.getgid()}")  # Get the group ID
+        
     print("ENTERED flatten_json_and_load_to_dataframe ***************")
     directory_path= os.path.join(LOCAL_RAW_DATA_DIR, local_extracted_json_dir)
     json_files = [f for f in os.listdir(directory_path) if f.endswith('.json')]    
@@ -178,6 +194,11 @@ def flatten_each_json_and_save_as_csv(local_extracted_json_dir):
     
 
 def flatten_all_json_and_save_as_csv(local_extracted_json_dir, **kwargs):
+    print(f"User ID (UID): {os.getuid()}")  # Get the user ID
+    print(f"Group ID (GID): {os.getgid()}")  # Get the group ID    
+    
+
+    
     print("ENTERED flatten_json_and_load_to_dataframe ***************")
     directory_path= os.path.join(LOCAL_RAW_DATA_DIR, local_extracted_json_dir)
     json_files = [f for f in os.listdir(directory_path) if f.endswith('.json')]
@@ -214,6 +235,10 @@ def flatten_all_json_and_save_as_csv(local_extracted_json_dir, **kwargs):
     return all_US_listings_csv_file
 
 def load_us_data_and_perform_eda(local_tmp_dir, **kwargs):
+    print(f"User ID (UID): {os.getuid()}")  # Get the user ID
+    print(f"Group ID (GID): {os.getgid()}")  # Get the group ID
+    
+    
     
     directory_path= os.path.join(LOCAL_RAW_DATA_DIR, local_tmp_dir)
     
@@ -285,6 +310,8 @@ def load_us_data_and_perform_eda(local_tmp_dir, **kwargs):
     
 
 def perform_eda_on_us_listings_data(local_dir, **kwargs):
+    print(f"User ID (UID): {os.getuid()}")  # Get the user ID
+    print(f"Group ID (GID): {os.getgid()}")  # Get the group ID    
     
     directory_path = os.path.join(LOCAL_RAW_DATA_DIR,  local_dir)
     all_US_listings_filtered_csv_file = directory_path +'/'+ US_ONLY_LISTINGS_CSV
@@ -349,6 +376,9 @@ def perform_eda_on_us_listings_data(local_dir, **kwargs):
 
 
 def flatten_to_csv_images(**kwargs):
+    print(f"User ID (UID): {os.getuid()}")  # Get the user ID
+    print(f"Group ID (GID): {os.getgid()}")  # Get the group ID
+        
     """Decompress and flatten the image metadata to a CSV file."""
     metadata_gz_path = os.path.join(LOCAL_RAW_IMGS_DIR, "images/metadata/images.csv.gz")
     output_csv_path = os.path.join(LOCAL_RAW_IMGS_DIR, "images_metadata.csv")
@@ -379,6 +409,9 @@ def flatten_to_csv_images(**kwargs):
 
 
 def download_tar_file_images(**kwargs):
+    print(f"User ID (UID): {os.getuid()}")  # Get the user ID
+    print(f"Group ID (GID): {os.getgid()}")  # Get the group ID
+    
     """Download the image tar file from the specified URL."""
     # Define the local path to save the tar file
     local_tar_path = os.path.join(LOCAL_RAW_IMGS_DIR, "abo-images-small.tar")
@@ -410,15 +443,22 @@ def download_tar_file_images(**kwargs):
 
 
 def extract_tar_file_images(**kwargs):
+    print(f"User ID (UID): {os.getuid()}")  # Get the user ID
+    print(f"Group ID (GID): {os.getgid()}")  # Get the group ID
+    
     """Extract the image tar file and process metadata and images."""
+    ########### LOCAL_RAW_IMGS_DIR="/opt/airflow/data/rawimages"    
     tar_file_path = os.path.join(LOCAL_RAW_IMGS_DIR, "abo-images-small.tar")
+    #####tar_file_path==> /opt/airflow/data/rawimages/abo-images-small.tar
     extract_dir = LOCAL_RAW_IMGS_DIR
+    ######extract_dir==/opt/airflow/data/rawimages
 
     # Check if the tar file exists
     if not os.path.exists(tar_file_path):
         raise FileNotFoundError(f"Tar file not found: {tar_file_path}")
 
     # Check if already extracted
+    ####checking for /opt/airflow/data/rawimages/images
     if os.path.exists(os.path.join(extract_dir, "images")):
         print(f"Tar file already extracted to: {extract_dir}. Skipping extraction.")
         return

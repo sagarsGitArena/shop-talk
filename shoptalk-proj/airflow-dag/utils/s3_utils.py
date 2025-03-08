@@ -8,7 +8,8 @@ from botocore.exceptions import NoCredentialsError
 
 def upload_file_to_s3(access_key, secret_key, bucket_name, file_name, local_file_path):
     # Create an S3 client using the provided credentials
-    s3 = boto3.client('s3', aws_access_key_id=access_key, aws_secret_access_key=secret_key)
+    #s3 = boto3.client('s3', aws_access_key_id=access_key, aws_secret_access_key=secret_key)
+    s3 = boto3.client('s3') 
 
     try:
         # Upload the local file to the specified S3 bucket with the given filename
@@ -23,7 +24,8 @@ def upload_file_to_s3(access_key, secret_key, bucket_name, file_name, local_file
 
 def download_file_from_s3(access_key, secret_key, bucket_name, file_name, local_file_path):
     print(f'AWS_ACCESS_KEY:{access_key}, AWS_SECRET_KEY:{secret_key}')
-    s3 = boto3.client('s3', aws_access_key_id=access_key, aws_secret_access_key=secret_key)
+    #s3 = boto3.client('s3', aws_access_key_id=access_key, aws_secret_access_key=secret_key)
+    s3 = boto3.client('s3')
 
     try:
         s3.download_file(bucket_name, file_name, local_file_path)
@@ -35,7 +37,8 @@ def download_file_from_s3(access_key, secret_key, bucket_name, file_name, local_
 
 def copy_file_between_buckets(access_key, secret_key, source_bucket, destination_bucket, file_name):
     # Create an S3 client using the provided credentials
-    s3 = boto3.client('s3', aws_access_key_id=access_key, aws_secret_access_key=secret_key)
+    #s3 = boto3.client('s3', aws_access_key_id=access_key, aws_secret_access_key=secret_key)
+    s3 = boto3.client('s3')
 
     try:
         # Copy the object (file) from the source bucket to the destination bucket

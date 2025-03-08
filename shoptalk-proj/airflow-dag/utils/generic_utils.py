@@ -5,6 +5,8 @@ from PIL import Image
 
 def copy_file( source_folder, destination_folder,file_name):   
 
+    print(f"User ID (UID): {os.getuid()}")  # Get the user ID
+    print(f"Group ID (GID): {os.getgid()}")  # Get the group ID
 
     source_file = os.path.join(source_folder.strip(), file_name.strip())
     #destination_file = os.path.join(destination_folder, os.path.basename(file_name))
@@ -35,6 +37,9 @@ def copy_file( source_folder, destination_folder,file_name):
 
 
 def generate_captions_batch(image_paths, device, processor, model):
+    print(f"User ID (UID): {os.getuid()}")  # Get the user ID
+    print(f"Group ID (GID): {os.getgid()}")  # Get the group ID
+        
     """Generates captions for a batch of images."""
     images = [Image.open(path).convert("RGB") for path in image_paths]
     #inputs = processor(images=images, return_tensors="pt", padding=True)
@@ -45,6 +50,9 @@ def generate_captions_batch(image_paths, device, processor, model):
 
 # Function that check and returns the valid path
 def validate_and_get_image_path(prefix_path, postfix_path):
+    print(f"User ID (UID): {os.getuid()}")  # Get the user ID
+    print(f"Group ID (GID): {os.getgid()}")  # Get the group ID
+        
     fullpath = os.path.join(prefix_path, postfix_path)
     if os.path.exists(fullpath):
         return fullpath

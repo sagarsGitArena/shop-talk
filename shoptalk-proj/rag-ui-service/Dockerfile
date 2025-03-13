@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y \
     python3-dev && \
     pip3 install --no-cache-dir faiss-gpu flask \
     sentence-transformers 
+    
 
 
 # Install specific versions of NumPy and FAISS
@@ -26,7 +27,7 @@ RUN pip install --no-cache-dir -U \
                 openai \
                 gradio \
                 pillow \
-                mlflow
+                mlflow rouge-score sacrebleu scikit-learn
 #                streamlit 
 
 

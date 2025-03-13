@@ -381,6 +381,7 @@ services:
       - "7860:7860"
     depends_on:
       - vector-db-service
+      - mlflow
     environment:
       - VECTOR_DB_HOST=http://vector-db-service:8000
       - NVIDIA_VISIBLE_DEVICES=all     

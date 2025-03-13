@@ -15,6 +15,75 @@ import os
 import requests
 import logging
 from config import REVERSE_STRING_API_ENDPOINT, CREATE_INDEX_API_ENDPOINT, FAISS_VECTOR_DB_SEARCH_ENDPOINT
+
+import time
+import mlflow
+from rouge_score import rouge_scorer
+import sacrebleu
+from sklearn.metrics.pairwise import cosine_similarity
+from sentence_transformers import SentenceTransformer
+import re
+
+# Load pre-trained sentence transformer model for semantic similarity
+sentence_model = SentenceTransformer("all-MiniLM-L6-v2")
+# Load a better model for similarity
+#sentence_model = SentenceTransformer("sentence-transformers/all-mpnet-base-v2")
+
+import time
+import mlflow
+from rouge_score import rouge_scorer
+import sacrebleu
+from sklearn.metrics.pairwise import cosine_similarity
+from sentence_transformers import SentenceTransformer
+
+# Load pre-trained sentence transformer model for semantic similarity
+sentence_model = SentenceTransformer("all-MiniLM-L6-v2")
+
+mlflow.set_tracking_uri("http://mlflow:5000")
+
+def compute_rouge(reference, response):
+    scorer = rouge_scorer.RougeScorer(["rouge1", "rougeL"], use_stemmer=True)
+    scores = scorer.score(reference, response)
+    return scores["rouge1"].fmeasure, scores["rougeL"].fmeasure
+
+def compute_bleu(reference, response):
+    bleu = sacrebleu.sentence_bleu(response, [reference])
+    return bleu.score
+
+def compute_cosine_similarity(reference, response):
+    ref_embedding = sentence_model.encode([reference])
+    resp_embedding = sentence_model.encode([response])
+    return cosine_similarity(ref_embedding, resp_embedding)[0][0]
+
+def log_query_to_mlflow(query, response, metadata=None, reference_response=""):
+    """
+    Logs user queries, LLM responses, and evaluation metrics to MLflow.
+    """
+    start_time = time.time()
+
+    # Compute evaluation metrics
+    rouge1_score, rougeL_score = compute_rouge(reference_response, response)
+    bleu_score = compute_bleu(reference_response, response)
+    cosine_sim = compute_cosine_similarity(reference_response, response)
+    
+    response_time = time.time() - start_time
+    response_length = len(response.split())
+
+    with mlflow.start_run():
+        mlflow.log_param("user_query", query)
+        mlflow.log_param("response_text", response)
+        mlflow.log_metric("response_length", response_length)
+        mlflow.log_metric("response_time_sec", response_time)
+        mlflow.log_metric("rouge1_f1", rouge1_score)
+        mlflow.log_metric("rougeL_f1", rougeL_score)
+        mlflow.log_metric("bleu_score", bleu_score)
+        mlflow.log_metric("cosine_similarity", cosine_sim)
+        
+        if metadata:
+            mlflow.log_dict(metadata, "metadata.json")
+
+    print(f"Logged query to MLflow: {query}")
+
 ##############################
 #openai.api_key = os.getenv("OPENAI_API_KEY")
 
@@ -153,6 +222,8 @@ def generate_llm_response(prompt, items):
             max_tokens=150
         )
     llm_response = response.choices[0].message.content.strip()
+       # Start MLflow logging
+    
     return llm_response       
     
 
@@ -255,6 +326,8 @@ with gr.Blocks() as app:
         sales_pitch, product_data = handle_query(query)        
         outputs = [sales_pitch]
 
+        # Log response to MLflow
+        log_query_to_mlflow(query, sales_pitch, metadata={"num_products": len(product_data)})
         # Update the product outputs
         for i in range(3):
             product = product_data[i]

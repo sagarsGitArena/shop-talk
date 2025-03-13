@@ -2,7 +2,7 @@
 
 mkdir -p ./dags
 cp -r ./airflow-dag/* ./dags
-mkdir -p ./logs ./plugins ./config ./data/raw ./data/rawimages ./mlruns ./downloads
+mkdir -p ./logs ./plugins ./config ./data/raw ./data/rawimages ./mlruns ./downloads ./vector_database/faiss_db
 echo -e "AIRFLOW_UID=$(id -u)" > .env
 
 echo -e "AIRFLOW_GID=0" >> .env

@@ -2,23 +2,22 @@
 
 Run the following command to set up the environment for the application:
 
-```bash
+
 curl -s https://raw.githubusercontent.com/sagarsGitArena/shop-talk/backup-2025-03-16/set-up/set-up.sh | bash
+
 
 ## 2. Navigate to the Project Directory
 Run the following to go to the Project Directory:
 
-```bash
 cd shop-talk/shoptalk-proj
 
 ## 3. Setting up the env for the project
-Run the following command to set up the project:
 
-```bash
 ./clean-up.sh
 ./proj-setup.sh
 
 ## 4. Run the project
-
 ```bash
 ./run-project.sh
+
+

@@ -27,9 +27,24 @@ else
     figlet_print_red "Git Repo Already Cloned"
 fi
 
+echo "Press Enter to proceed..."
+read -p "Setup is ready. Press Enter to proceed..." 
+
 # List the current directory's content
-pwd
-ls -lart 
+#
+PWD=`pwd`
+
+
+
+echo "Listing contents of the current directory: $PWD"
+echo "-------------------------------------------"
+
+# List files and directories
+ls -lah
+
+echo "-------------------------------------------"
+read -p "Press Enter to proceed..."
+
 
 # Check if the repository directory exists
 if [ -d "$REPO_DIR" ]; then

@@ -13,8 +13,9 @@ cd shop-talk/shoptalk-proj
 
 ## 3. Setting up the env for the project
 
-./clean-up.sh
+./clean-up.sh<br>
 ./proj-setup.sh
+
 
 ## 4. Run the project
 ```bash

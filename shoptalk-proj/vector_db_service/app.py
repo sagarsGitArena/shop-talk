@@ -170,94 +170,82 @@ def string_reverse():
     print(f'printing reversed text in vector-db-service: [{reversed_text}]')
     return jsonify({"original": text, "reversed": reversed_text})
 
+import mlflow
+import numpy as np
+
+import mlflow
+import numpy as np
+
 @app.route("/faiss-search", methods=["POST"])
 def faiss_search():
-    
+    # Set up MLflow tracking
+    mlflow.set_tracking_uri("http://mlflow:5000")
+    mlflow.set_experiment("RAG_Model_Evaluation")
+
+    with mlflow.start_run():
         # Load FAISS index
-    index = faiss.read_index(FAISS_INDEX_PATH)
-    
-    with open(FAISS_METADATA_PATH, "r") as f:
-        metadata = json.load(f)
-    
-    with open(FAISS_INDEX_TO_ITEM_ID_JSON_FILE_PATH, "r") as f:
-        faiss_idx_to_item_id_map = json.load(f)
-    
-    print("FAISS index and metadata loaded successfully!")
-    #print(f'metadata :{metadata}')
-    jsonify({"message": "In search added successfully!"})
-    
-    for key, value in list(faiss_idx_to_item_id_map.items())[:5]:
-            print(f"Key: {key}, Value: {value}")
+        index = faiss.read_index(FAISS_INDEX_PATH)
+
+        with open(FAISS_METADATA_PATH, "r") as f:
+            metadata = json.load(f)
+
+        with open(FAISS_INDEX_TO_ITEM_ID_JSON_FILE_PATH, "r") as f:
+            faiss_idx_to_item_id_map = json.load(f)
+
+        data = request.get_json()
+        user_query = data.get("prompt", "")
+        ground_truth = data.get("ground_truth", ["B085D7PY88","B084RRNK4V","B07KGMHN5S","B074H738KL","B07GKZWKHD","B07FP3B2DL","B076573LCD","B07RHV27C6","B074H5BVLD","B074H5BV99"])  # Expected item_ids (if available)
+
+        model = SentenceTransformer('all-MiniLM-L6-v2')
+        query_embedding = model.encode(user_query).astype('float32').reshape(1, -1)
+
+        top_k = 3
+        distances, indices = index.search(query_embedding, top_k)
+
+        results = []
+        relevant_items = 0
+        reciprocal_ranks = []
+        retrieved_item_ids = []
+
+        for i, faiss_idx in enumerate(indices[0]):
+            if faiss_idx == -1:
+                continue  
+
+            item_id = faiss_idx_to_item_id_map.get(str(faiss_idx), None)
+            if item_id is None:
+                continue
+
+            # ✅ Print the retrieved item_id to the console
+            print(f"Retrieved item_id at rank {i+1}------------------------: {item_id}")
+            retrieved_item_ids.append(item_id)
+
+            if str(item_id) in ground_truth:
+                relevant_items += 1
+                reciprocal_ranks.append(1 / (i + 1))  
+
+            results.append({
+                "rank": i + 1,
+                "item_id": item_id,
+                "concatenated_desc": metadata.get(item_id, {}).get('concatenated_desc', 'N/A'),
+                "image_file_location": metadata.get(item_id, {}).get('image_path', 'N/A'),
+                "price": metadata.get(item_id, {}).get('Price', 'N/A'),
+                "color_value": metadata.get(item_id, {}).get('color_value', 'N/A')
+            })
             
-    # Your data to send in the request
-    ########### EXLORING metadat ##
-    # Print first 5 key-value pairs
-    print(f'Length : {len(metadata)}')
-    if isinstance(metadata, dict):
-        print("Metadata is a dictionary. First 5 key-value pairs:")
-        for key, value in list(metadata.items())[:5]:
-            print(f"Key: {key}, Value: {value}")
-    elif isinstance(metadata, list):
-        print("Metadata is a list. First 5 elements:")
-        print(metadata[:5])
-    else:
-        print("Unexpected metadata format.")
-
-
-    data = request.get_json()
-
-    # Set the headers
-    headers = {'Content-Type': 'application/json'}
-    
-    user_query = data.get("prompt", "")
-    print(f'PROMPT: {user_query}')
-    
-    
-    model = SentenceTransformer('all-MiniLM-L6-v2')
-    query_embedding = model.encode(user_query).astype('float32').reshape(1, -1)
-    
-    top_k=3
-    # Perform search
-    distances, indices = index.search(query_embedding, top_k)
-    results = []
-    # Retrieve and print metadata based on item_id
-    for i, faiss_idx in enumerate(indices[0]):
-        if faiss_idx == -1:
-            continue  # Skip invalid indices if any
-
-        # Assuming item_id is the same as the FAISS index, otherwise map accordingly
-        print(f'i:{i}, faiss_idx:{faiss_idx}')
-##        item_id = faiss_idx_to_item_id_map[faiss_idx]  
-        # Map FAISS index to item_id
-        item_id = faiss_idx_to_item_id_map.get(str(faiss_idx), None)
-        if item_id is None:
-            print(f"FAISS index {faiss_idx} not found in the mapping!")
-        else:
-            print(f"FAISS index {faiss_idx} maps to item_id {item_id}")
-
-        print(item_id)
-        print(f"Rank {i+1}:")
-        print("Product Metadata:", metadata[item_id])  # Fetch metadata using item_id
-        print("Distance:", distances[0][i])
-        print(f" Concatenated Desc : {metadata[item_id]['concatenated_desc']}")
-        print(f"Image Path: {metadata[item_id]['image_path']}")
-        #print(f"Image Abs Path: {metadata[item_id]['tmp_image_path']}")
         
-        # Append results in a dictionary format to be returned
-        results.append({
-            "rank": i+1,
-            "item_id": item_id,
-            #"distance": float(distances[0][i]),
-            #"metadata": metadata.get(item_id, {}),
-            "concatenated_desc": metadata.get(item_id, {}).get('concatenated_desc', 'N/A'),
-            "image_file_location": metadata.get(item_id, {}).get('image_path', 'N/A'), # {metadata[item_id]['tmp_image_path']}
-            "price": metadata.get(item_id, {}).get('Price', 'N/A'),
-            "color_value": metadata.get(item_id, {}).get('color_value', 'N/A')
-        })
-    
-    print(jsonify(results))
-    # Return the search results
-    return jsonify(results)
+        recall_at_k = relevant_items / len(ground_truth) if ground_truth else 0
+        precision_at_k = relevant_items / top_k
+        mrr = np.mean(reciprocal_ranks) if reciprocal_ranks else 0.0
+
+        # Log Metrics in MLflow (without changing return type)
+        mlflow.log_param("Query", user_query)
+        mlflow.log_metric("RecallK", recall_at_k)
+        mlflow.log_metric("PrecisionK", precision_at_k)
+        mlflow.log_metric("MRR", mrr)
+
+        return jsonify(results)  # ✅ Keeping the original return type
+
+
     
 
 @app.route("/search", methods=["GET", "POST"])

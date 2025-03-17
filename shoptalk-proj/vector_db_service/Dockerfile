@@ -6,7 +6,8 @@ RUN apt-get update && apt-get install -y \
     python3-pip \
     python3-dev && \
     pip3 install --no-cache-dir faiss-gpu flask \
-    sentence-transformers 
+    sentence-transformers
+     
 
 # RUN pip install --no-cache-dir numpy faiss-gpu flask
 
@@ -27,7 +28,7 @@ RUN pip install --no-cache-dir \
                 flask \
                 "cupy-cuda12x" \
                 boto3 \
-                mlflow
+                mlflow rouge-score sacrebleu scikit-learn
 
 
 # Copy application files

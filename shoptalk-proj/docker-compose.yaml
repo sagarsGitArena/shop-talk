@@ -359,6 +359,7 @@ services:
       - "8000:8000"
     depends_on:
       - airflow-webserver
+      - mlflow
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:5050/ || exit 1"]  # Check API availability
       interval: 10s            # Interval between health checks

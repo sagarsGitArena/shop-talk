@@ -18,7 +18,7 @@ cd shop-talk/shoptalk-proj
 
 
 ## 4. Run the project
-```bash
+
 ./run-project.sh
 
 

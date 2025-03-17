@@ -21,17 +21,17 @@ fi
 
 # Clone the repository if it doesn't already exist
 if [ ! -d "$REPO_DIR" ]; then
-    read -p $'\e[1;32mCloning GIT Repository. Press Enter to Proceed...\e[0m'
+    read -r -p $'\e[1;32mCloning GIT Repository. Press Enter to Proceed...\e[0m'
     figlet_print_red "Cloning Git Repo"
     git clone git@github.com:sagarsGitArena/shop-talk.git
-    read -p $'\e[1;32mRunning git checkout backup-2025-03-16 . Press Enter to Proceed....\e[0m'
+    read -r -p $'\e[1;32mRunning git checkout backup-2025-03-16 . Press Enter to Proceed....\e[0m'
     git checkout backup-2025-03-16
 else
     figlet_print_red "Git Repo Already Cloned"
 fi
 
 echo "Press Enter to proceed..."
-read -p "Setup is ready. Press Enter to proceed..." 
+read -r -p "Setup is ready. Press Enter to proceed..." 
 
 # List the current directory's content
 #
@@ -46,7 +46,7 @@ echo "-------------------------------------------"
 ls -lah
 
 echo "-------------------------------------------"
-read -p  $'\e[1;32mPress Enter to proceed...\e[0m'
+read -r -p  $'\e[1;32mPress Enter to proceed...\e[0m'
 
 
 # Check if the repository directory exists

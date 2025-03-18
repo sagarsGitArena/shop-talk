@@ -54,7 +54,36 @@ with DAG(
     #     dag=dag
     # )
 
-    extract_task = PythonOperator(
+
+
+    copy_listings_from_s3 = PythonOperator(
+        task_id="copy_listings_to_local_folder",
+        python_callable=download_file_from_s3,
+        task_concurrency=2,
+        op_kwargs={
+                    "bucket_name": AWS_S3_BUCKET,
+                    "file_name" : LISTINGS_OBJECT_S3_KEY_ID,
+                    "local_file_path": TMP_LISTINGS_DOWNLOAD_LOCATION
+                   },
+        trigger_rule='all_success',
+        depends_on_past=False,
+        dag=dag
+    )    
+
+    copy_listings_to_raw_folder_task = PythonOperator(
+        task_id="copy_listings_tar_file",
+        python_callable=copy_listings_tar_file,
+        op_kwargs={
+                    "source_path": TMP_LISTINGS_SOURCE,
+                    "destination_path": LOCAL_RAW_DATA_DIR,
+                    "tar_file_name" : TAR_FILE_NAME
+                   },
+        trigger_rule='all_success',
+        depends_on_past=False,
+        dag=dag
+    )
+    
+    extract_listings_tar_task = PythonOperator(
         task_id="extract_tar_file",
         python_callable=extract_tar_file,
         op_kwargs={ 
@@ -70,39 +99,8 @@ with DAG(
         dag=dag
         
     )
-
-    copy_listings_to_local_folder_from_s3 = PythonOperator(
-        task_id="copy_listings_to_local_folder",
-        python_callable=download_file_from_s3,
-        task_concurrency=2,
-        op_kwargs={
-#                    "access_key": os.environ["AWS_ACCESS_KEY_ID"],
-#                    "secret_key": os.environ["AWS_SECRET_ACCESS_KEY"],
-                    "bucket_name": AWS_S3_BUCKET,
-                    "file_name" : LISTINGS_OBJECT_S3_KEY_ID,
-                    "local_file_path": TMP_LISTINGS_DOWNLOAD_LOCATION
-                   },
-        trigger_rule='all_success',
-        depends_on_past=False,
-        dag=dag
-    )    
-
-    copy_listings_task = PythonOperator(
-        task_id="copy_listings_tar_file",
-        python_callable=copy_listings_tar_file,
-        op_kwargs={
-                    "source_path": TMP_LISTINGS_SOURCE,
-                    "destination_path": LOCAL_RAW_DATA_DIR,
-                    "tar_file_name" : TAR_FILE_NAME
-                   },
-        trigger_rule='all_success',
-        depends_on_past=False,
-        dag=dag
-    )
     
-
-    
-    flatten_all_json_and_save_US_data_as_csv = PythonOperator(
+    flatten_all_listings_json_and_save_US_data_as_csv_task = PythonOperator(
         task_id="flatten_all_json_and_save_US_data_as_csv",
         python_callable=flatten_all_json_and_save_as_csv,
         op_kwargs= {"local_extracted_json_dir": "listings/metadata/"},
@@ -112,7 +110,7 @@ with DAG(
         dag=dag
     )
     
-    load_us_data_and_perform_eda = PythonOperator(        
+    load_US_listings_data_task = PythonOperator(        
         task_id="load_us_data_and_perform_eda",
         python_callable=load_us_data_and_perform_eda,
         op_kwargs= {"local_tmp_dir": "listings/metadata/"},
@@ -122,7 +120,7 @@ with DAG(
         dag=dag
     )
 
-    perform_eda_on_us_listings_data = PythonOperator(        
+    perform_eda_on_US_listings_data_task = PythonOperator(        
         task_id="perform_eda_on_us_listings_data",
         python_callable=perform_eda_on_us_listings_data,
         op_kwargs= {"local_dir": "listings/metadata/"},
@@ -154,13 +152,11 @@ with DAG(
     #     dag=dag,
     # )
 
-    copy_images_to_local_folder_from_s3 = PythonOperator(
+    copy_images_to_local_folder_from_s3_task = PythonOperator(
         task_id="copy_images_to_local_folder",
         python_callable=download_file_from_s3,
         task_concurrency=2,
         op_kwargs={
-#                    "access_key": os.environ["AWS_ACCESS_KEY_ID"],
-#                    "secret_key": os.environ["AWS_SECRET_ACCESS_KEY"],
                     "bucket_name": AWS_S3_BUCKET,
                     "file_name" : IMAGES_OBJECT_S3_KEY_ID,
                     "local_file_path": TMP_IMAGE_DOWNLOAD_LOCATION
@@ -170,7 +166,7 @@ with DAG(
         dag=dag
     )
     
-    copy_to_rawimage_folder = PythonOperator(
+    copy_to_rawimage_folder_task = PythonOperator(
         task_id="copy_to_rawimage_folder",
         python_callable=copy_file,
                 op_kwargs={
@@ -237,8 +233,6 @@ with DAG(
     upload_captions_to_s3_task = PythonOperator(
         task_id="upload_captions_to_s3_task",
         op_kwargs= {
-#                    "access_key": os.environ["AWS_ACCESS_KEY_ID"],
-#                    "secret_key": os.environ["AWS_SECRET_ACCESS_KEY"],
                     "bucket_name": AWS_S3_BUCKET,
                     "local_dir": "listings/metadata/"},
         python_callable=upload_captions_to_s3,        
@@ -265,8 +259,6 @@ with DAG(
         endpoint=FAISS_API_ENDPOINT,
         data=json.dumps({
             's3_bucket_name': AWS_S3_BUCKET,
-#            'aws_access_key': os.environ["AWS_ACCESS_KEY_ID"],
-#            'aws_secret_key': os.environ["AWS_SECRET_ACCESS_KEY"],
             's3_object_key': S3_CAPTIONED_OBJECT_KEY
         }),
         headers={"Content-Type": "application/json"},
@@ -281,5 +273,5 @@ with DAG(
 #[download_task >> extract_task >> flatten_all_json_and_save_as_csv , download_images_task >> extract_images_task >> flatten_images_metadata_task] >> merge_listings_image_df_task
 
 ## If we are copying the tar file from local dir for minimal dataset
-[copy_listings_to_local_folder_from_s3 >> copy_listings_task >> extract_task >> flatten_all_json_and_save_US_data_as_csv >> load_us_data_and_perform_eda >> perform_eda_on_us_listings_data,  copy_images_to_local_folder_from_s3 >> copy_to_rawimage_folder >> extract_images_task >> flatten_images_metadata_task] >> merge_listings_image_df_task >> merged_data_clean_up_task >> generate_image_captions_task >> upload_captions_to_s3_task >> check_if_data_file_arrived_task >> load_faiss_vector_db_task
+[copy_listings_from_s3 >> copy_listings_to_raw_folder_task >> extract_listings_tar_task >> flatten_all_listings_json_and_save_US_data_as_csv_task >> load_US_listings_data_task >> perform_eda_on_US_listings_data_task,  copy_images_to_local_folder_from_s3_task >> copy_to_rawimage_folder_task >> extract_images_task >> flatten_images_metadata_task] >> merge_listings_image_df_task >> merged_data_clean_up_task >> generate_image_captions_task >> upload_captions_to_s3_task >> check_if_data_file_arrived_task >> load_faiss_vector_db_task
 #[check_if_data_file_arrived_task >> load_faiss_vector_db_task]

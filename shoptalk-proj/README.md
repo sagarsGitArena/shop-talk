@@ -174,6 +174,88 @@ shoptalk-proj
 ├── README.md                 # This file
 └── *.sh                      # created shell cripts to cleanup, settingup environment, pull secerets and keys and start docker container
 ```
+- ## 🧩 **airflow-dag**: ShopTalk Ingestion Pipeline
+
+This DAG orchestrates the end-to-end ingestion and processing of product listings and image metadata using **Apache Airflow**. It automates tasks such as downloading data, extracting and flattening JSON files, performing EDA, generating image captions, and triggering the FAISS vector database loader.
+
+The goal is to build a **cleaned, flattened, and captioned product dataset** that can later be indexed and searched semantically using FAISS and LLMs.
+
+---
+
+### 🔄 Workflow Overview
+
+| Step | Task Name | Description |
+|------|-----------|-------------|
+| 1️⃣   | `copy_listings_to_local_folder_from_s3` | Copy product listing tar from S3. |
+| 2️⃣   | `copy_listings_tar_file` → `extract_tar_file` | Move and extract listing metadata. |
+| 3️⃣   | `flatten_all_json_and_save_US_data_as_csv` | Flatten listing JSONs to CSV (US only). |
+| 4️⃣   | `load_us_data_and_perform_eda` → `perform_eda_on_us_listings_data` | Load and analyze listing data. |
+| 5️⃣   | `copy_images_to_local_folder_from_s3` → `copy_to_rawimage_folder` | Copy image tar from S3 and move to raw folder. |
+| 6️⃣   | `extract_tar_file_images` → `flatten_to_csv_images` | Extract and flatten image metadata. |
+| 7️⃣   | `merge_listings_image_df_task` → `merged_data_clean_up_task` | Merge listings and images, clean up missing data. |
+| 8️⃣   | `generate_image_captions_task` → `upload_captions_to_s3_task` | Generate captions and upload to S3. |
+| 9️⃣   | `check_if_data_file_arrived_task` → `load_faiss_vector_db_task` | Validate S3 upload, then trigger FAISS index load. |
+
+---
+- > ![alt text](./docs/airflow_dag.png)
+
+## 🛍️ **rag-ui-service**: Conversational Shopping Assistant
+
+This module powers the frontend and backend logic for **ShopTalk**, a personalized shopping assistant that integrates Large Language Models (LLMs), vector search, and interactive UI via Gradio.
+
+---
+
+### 🎯 Key Features
+
+- Accepts user queries via a conversational UI.
+- Performs **semantic vector search** using FAISS to retrieve top product matches.
+- Uses **OpenAI's GPT-3.5** via LangChain to:
+  - Rephrase descriptions.
+  - Generate personalized sales pitches.
+- Renders results (images + descriptions) using **Gradio**.
+- Logs and evaluates responses using **MLflow** and NLP metrics.
+
+---
+
+### 🔄 Workflow
+
+| Step | Description |
+|------|-------------|
+| **1. User Input** | Accepts shopping query via Gradio UI. |
+| **2. Vector Search** | Sends prompt to FastAPI endpoint using FAISS for top-k image results. |
+| **3. LLM Generation** | Generates natural responses and product pitches using OpenAI GPT-3.5. |
+| **4. Display Results** | Shows product images, details, and a custom LLM-generated sales pitch. |
+| **5. Evaluation & Logging** | Evaluates generated text using ROUGE, BLEU, Cosine similarity and logs metrics to MLflow. |
+
+---
+
+## ⚡ **vector_db_service**: FAISS Vector Search & Evaluation Service (Backend)
+
+This Flask application powers the backend vector database component for ShopTalk. It enables GPU-accelerated FAISS search over product embeddings and supports multiple endpoints for indexing, searching, and evaluation using MLflow.
+
+### 🎯 Purpose
+
+Traditional keyword-based search fails to understand user intent and product context. This service solves that by:
+- Converting queries and product metadata into **dense vector embeddings**.
+- Using **FAISS** to perform **Approximate Nearest Neighbor (ANN)** search for fast top-k retrieval.
+- Evaluating how good the retrieved results are using NLP metrics.
+- Logging every experiment for comparison and improvement.
+
+---
+
+### 🎯 Key Functionalities
+
+| Endpoint                    | Method | Description |
+|-----------------------------|--------|-------------|
+| `/`                         | GET    | Health check for FAISS service |
+| `/add`                      | GET/POST | Placeholder for vector addition |
+| `/string-reverse`          | POST   | Utility endpoint to reverse a string (test endpoint) |
+| `/search`                  | POST   | Search over FAISS by query embedding and return top K image paths |
+| `/search_v2`               | POST   | Vector search using GPU with metadata return |
+| `/faiss-search`            | POST   | Search + evaluation (Recall@K, Precision@K, MRR) + MLflow tracking |
+| `/load_data_file_from_s3`  | POST   | Loads CSV from S3, embeds text, builds FAISS index, uploads results |
+
+---
 
 ## 11. GoogleColab Notebooks
 

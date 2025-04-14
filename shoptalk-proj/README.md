@@ -77,7 +77,7 @@ Traditional keyword-based search limits user experience and fails to meet modern
 
 ## 3. System Architecture
 
-> ![alt text](image.png)
+> ![alt text](shoptalk-proj\docs\airflow_dag.png)
 
 ## 4. Data Flow
 

@@ -3,7 +3,7 @@
 
 1. [Project Overview](#1-project-overview)  
 2. [Tech Stack](#2-tech-stack)
-3. [System Architecture](#3-system-architecture)  
+3. [System Components](#3-system-components)  
 4. [Data Flow](#4-data-flow)  
 5. [Deployment Setup](#5-deployment-setup)  
 6. [Model Evaluation & Monitoring](#6-model-evaluation--monitoring)  
@@ -13,7 +13,6 @@
 10. [Repository Structure](#10-repository-structure)
 11. [GoogleColab Notebooks](#11-google-colab-notebooks)
 12. [Team Contacts](#12-team-contacts)
-
 
 
 ## 1. Project Overview 📌
@@ -60,8 +59,6 @@ Traditional keyword-based search limits user experience and fails to meet modern
 - ✅ **Lower Bounce Rates**  
   Keeps users engaged with dynamic and personalized responses
 
-
-
 ## 2. Tech Stack
 
 | Layer        | Technology                        |
@@ -75,9 +72,9 @@ Traditional keyword-based search limits user experience and fails to meet modern
 | Evaluation   | MLflow                            |
 | LLM & Prompting |	OpenAI GPT, LangChain          | 
 
-## 3. System Architecture
+## 3. System Components
 
-> ![alt text](shoptalk-proj\docs\airflow_dag.png)
+> ![alt text](./docs/components_interaction_and_flow.png)
 
 ## 4. Data Flow
 
@@ -106,27 +103,28 @@ Traditional keyword-based search limits user experience and fails to meet modern
 ### 🖥️ Infrastructure
 
 - **EC2 Setup**:  
-  - Instance Type: `t2.medium` / `t3.large` (based on compute needs)  
-  - Security Groups: Configured and data saved onto S3 bucket 
-  - OS: Amazon Linux 2 / Ubuntu 20.04
+  - Instance Type: `g4dn.2xlarge`   
+  - Security Groups: microservices configured to default
+  - IAM roles: EC2 is given full access to S3 bucket 
+  - AMI: amazon/Deep Learning OSS Nvidia Driver AMI GPU PyTorch 2.6.0 (Ubuntu 22.04) 20250223
+- > ![alt text](./docs/nvidia_docker.png)
 
 ---
 
 ### 🐳 Docker & Microservices
 
-- **Dockerization**:  
-  - Each component (frontend, backend, ML service) has its own `Dockerfile`
+- **Dockerization**:
+    
+  - Docker containers:
+    -  Airflow Containers- ()
+    -  RAG UI Service
+    -  Vector DB Service
+    -  MLFlow
 
 - **Service Orchestration**:  
-  - `docker-compose.yml` to manage multiple containers  
-  - (Optional) Kubernetes manifests for production-grade deployment
-
-- **NGINX Reverse Proxy**:  
-  - Used for routing requests to appropriate microservices  
-  - SSL configured if HTTPS is required
-
+    - `docker-compose.yml` to manage multiple containers  
+  
 ---
-
 
 ## 6. Model Evaluation
 
@@ -150,8 +148,7 @@ Traditional keyword-based search limits user experience and fails to meet modern
 - Microservice integration and inter-service communication
 - Dockerizing large ML models and optimizing image sizes
 - Because we are computing with gpu instead of cpu, our credits was continuosly exhausting if we use entire dataset, so we ran entire dataset using google colab notebook setting it to T4 and on ec2 we had to restrict for 2000 images to continue our project.
-- Integrating MLFlow for evaluating RAG and with LLM
-- 
+- Integrating MLFlow for evaluating RAG and with LLM 
 
 ---
 
@@ -160,6 +157,7 @@ Traditional keyword-based search limits user experience and fails to meet modern
 - Handling responses if there are missing images for the given query
 - Adding a feedback loop for continuous model improvement
 - Enhancing monitoring to include concept drift and data quality alerts
+- Handling Empty Image situations
 
 ---
 
@@ -179,13 +177,26 @@ shoptalk-proj
 
 ## 11. GoogleColab Notebooks
 
-  - Links to Google colab notebooks that we worked 
-  
+  - [ShopTalk-all-listings-initial-analysis](https://colab.research.google.com/drive/1EqinYeJ5PSk4c9XREXfJJmKRZFNKbgi2) 
+  - [ShopTalk-Image-Captioning](https://colab.research.google.com/drive/1i1AyOedvdQ1_jSSNa_CCKRFVKvOs7alq)
+  - [Embeddings-to-Chroma-VectorDB](https://colab.research.google.com/drive/1r0b2XXwO7GFOEHdyXlp46K3Hyj0Cap8y)
+  - Top-K-Records-with-salespitch-and-images
+    - [Shopping-umbrella](https://colab.research.google.com/drive/1QuwmUwaRLftS5nrCeCgXG_cLsDGCAfyD)
+    - [Shopping-birthday-gift-7yr-old](https://colab.research.google.com/drive/16IwrNV_8Et-3MRXZUV7yWHbcFbRYlXEv)
+    - [Shopping-womens-watch](https://colab.research.google.com/drive/1biVZcZLWp0og-bQACoujImqGywY58E6d)
+    - [Shopping-Shoe](https://colab.research.google.com/drive/15VP6ChsL8_qfKL1P7HlTXYK2cSKMf4x4)
+    - [Shopping-soft-toy-2yr-old](https://colab.research.google.com/drive/1YfrrPCBBTLFCyC9T-leOVtL8JNTJdQR9)
+    - [Shopping-expensive-mens-jacket](https://colab.research.google.com/drive/1CHxVEfEMG4ClBNVVXhb06IJG1LoYVZXl)
+  - Exploring FAISS VectorDB options
+    - [FAISS-IVF-PQ-Indexing](https://colab.research.google.com/drive/1XpT1FSwoOO5Pk8fXqsOzU_oXkjr3Jv9j)
+    - [FAISS-HNSW-Indexing](https://colab.research.google.com/drive/1ojgbYRg7V3_WUi_vBazcLXgcCUZElSBp)
+    - [FAISS-FlatL2-Indexing](https://colab.research.google.com/drive/1qVPMOMgZU6MYbSdlo4nkp15yUGlKzoSL)
+ 
 ## 12. Team Contacts
 
-- **Authors**: Sagar Vasamsetty, Vijaya Lakshmi Ijjada, Sumit Kumar Singh, Srinivas Nagamantha  
+- **Authors**: VidyaSagar Vasamsetty, Vijaya Lakshmi Ijjada, Sumit Kumar Singh, Srinivas Nagamantha  
 - **Email**: vasamsetty@gmail.com,onlinevijaya30@gmail.com,kumarsumitsingh@gmail.com,nagamantha11@gmail.com 
-- **GitHub**: https://github.com/sagarsGitArena/shop-talk/tree/main/shoptalk-proj
+- **GitHub**: https://github.com/sagarsGitArena/shop-talk
 
 
 

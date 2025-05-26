@@ -42,7 +42,7 @@ sudo usermod -aG docker $USER
 
 #printf "\e[32m$(figlet -w 200 -f slant 'Verify Docker Installation')\e[0m"
 figlet_print_green 'Verify Docker Installation'
-docker  run hello-world
+sudo docker  run hello-world
 id -nG
 #exit
 #ssh to the ec2 again

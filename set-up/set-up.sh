@@ -22,16 +22,21 @@ fi
 # Clone the repository if it doesn't already exist
 if [ ! -d "$REPO_DIR" ]; then
     echo -e $'\e[1;32mCloning GIT Repository. Press Enter to Proceed...\e[0m'
-    read -r 
+    read -r
     figlet_print_red "Cloning Git Repo"
-    #git clone git@github.com:sagarsGitArena/shop-talk.git
     git clone git@github.com:sagarsGitArena/shop-talk.git
+    #git clone --branch backup-2025-03-16 git@github.com:sagarsGitArena/shop-talk.git
+    cd shop-talk
+    git fetch origin
     echo -e $'\e[1;32mRunning git checkout backup-2025-03-16 . Press Enter to Proceed....\e[0m'
-    read -r 
-    git checkout backup-2025-03-16
+    read -r
+    #git checkout backup-2025-03-16
+    git checkout -b backup-2025-03-16 origin/backup-2025-03-16
+
 else
     figlet_print_red "Git Repo Already Cloned"
 fi
+
 
 echo "Press Enter to proceed..."
 read -r -p "Setup is ready. Press Enter to proceed..." 

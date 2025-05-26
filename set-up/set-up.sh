@@ -24,6 +24,7 @@ if [ ! -d "$REPO_DIR" ]; then
     echo -e $'\e[1;32mCloning GIT Repository. Press Enter to Proceed...\e[0m'
     read -r 
     figlet_print_red "Cloning Git Repo"
+    #git clone git@github.com:sagarsGitArena/shop-talk.git
     git clone git@github.com:sagarsGitArena/shop-talk.git
     echo -e $'\e[1;32mRunning git checkout backup-2025-03-16 . Press Enter to Proceed....\e[0m'
     read -r 

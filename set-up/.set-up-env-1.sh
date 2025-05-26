@@ -1,3 +1,29 @@
+#!/bin/bash
+
+
+figlet_print_green() {
+    # "$1" gets the first argument passed to the function
+    printf "\e[32m$(echo -e "$1" | figlet -w 300 -f slant)\e[0m"
+    echo ""
+}
+
+
+if ! dpkg -l | grep -q figlet; then
+    sudo apt update
+    sudo apt install -y figlet
+else
+    echo "Figlet is already installed."
+fi
+
+
+figlet_print_green 'Ubuntu Update'
+sudo apt update
+figlet_print_green 'Ubuntu Upgrade'
+
+sudo apt upgrade -y
+
+
+
 figlet_print_green 'Install Docker'
 sudo apt install -y apt-transport-https ca-certificates curl software-properties-common
 

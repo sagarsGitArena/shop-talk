@@ -35,7 +35,8 @@ echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docke
 sudo apt update
 
 figlet_print_green 'Install Docker Components'
-sudo apt install -y docker-ce docker-ce-cli containerd.io
+sudo DEBIAN_FRONTEND=noninteractive apt install -y docker-ce docker-ce-cli containerd.io
+#sudo apt install -y docker-ce docker-ce-cli containerd.io
 
 figlet_print_green 'Verify Docker version'
 docker --version

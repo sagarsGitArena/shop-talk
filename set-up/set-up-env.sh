@@ -17,8 +17,8 @@ fi
 #printf "\e[31m$(figlet Docker Installation )\e[0m"
 figlet_print_red "Docker Installation"
 ./set-up/.set-up-env-1.sh
-figlet_print_red 'NVIDIA - Pre-requisite'
-./set-up/.nvidia-pre-req.sh
+#figlet_print_red 'NVIDIA - Pre-requisite'
+#./set-up/.nvidia-pre-req.sh
 figlet_print_red 'NVIDIA - Docker Upgrade'
 ./set-up/.set-up-env-2.sh
 figlet_print_red 'Set Up Complete'
